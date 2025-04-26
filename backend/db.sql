@@ -1,0 +1,29 @@
+CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE bookings (
+    booking_id SERIAL PRIMARY KEY,
+    firstname VARCHAR(255) NOT NULL,
+    lastname VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    user_id INTEGER REFERENCES users(user_id),
+    service_id INTEGER REFERENCES services(service_id),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE services (
+    service_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    color VARCHAR(255) NOT NULL
+);

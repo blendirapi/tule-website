@@ -1,0 +1,12 @@
+<h2 class="text-xl font-semibold mb-6">Επιλέξτε Κουρέα</h2>
+
+<div class="flex justify-center gap-4">
+    <!-- Option 1 -->
+    <label *ngFor="let artist of artists">
+        <input type="radio" name="{{ artist.name }}" class="hidden peer" (click)="selectArtist(artist.user_id)"/>
+        <div class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden">
+            <img src="head.svg" alt="{{ artist.name }}" class="h-28 w-16 object-cover mb-1">
+            <span class="text-sm">{{ artist.name }}</span>
+        </div>
+    </label>
+</div>

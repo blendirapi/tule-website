@@ -1,0 +1,47 @@
+<app-header></app-header>
+
+<main class="flex flex-col items-center py-10 px-4 space-y-6 bg-black">
+    <p class="text-center text-sm text-gray-300 max-w-sm">
+        Τα ραντεβού για tattoo και piercing κλείνονται αποκλειστικά μέσω Instagram ή τηλεφωνικά.
+    </p>
+
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-lg text-center space-y-6 text-black">
+        <app-book-artist
+            *ngIf="!selectedArtist" 
+            (artistSelected)="onArtistSelected($event)">
+        </app-book-artist>
+        
+        <app-book-type
+            *ngIf="selectedArtist && !selectedService" 
+            (optionSelected)="onServiceSelected($event)">
+        </app-book-type>
+        
+        <app-book-calendar 
+            *ngIf="selectedArtist && selectedService && !selectedDate"
+            [selectedArtist]="selectedArtist"
+            (dateSelected)="onDateSelected($event)">
+        </app-book-calendar>
+        
+        <app-book-time 
+            *ngIf="selectedArtist && selectedService && selectedDate && !selectedTime"
+            [selectedArtist]="selectedArtist"
+            [selectedDate]="selectedDate"
+            (timeSelected)="onTimeSelected($event)">
+        </app-book-time>
+        
+        <app-book-data
+            *ngIf="selectedArtist && selectedService && selectedDate && selectedTime && !bookingComplete"
+            [selectedArtist]="selectedArtist"
+            [selectedService]="selectedService"
+            [selectedDate]="selectedDate"
+            [selectedTime]="selectedTime"
+            (formSubmitted)="onFormSubmitted($event)">
+        </app-book-data>
+        
+        <app-book-final
+            *ngIf="bookingComplete">
+        </app-book-final>
+    </div>
+</main>
+
+<app-footer></app-footer>

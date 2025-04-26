@@ -1,0 +1,142 @@
+<app-dashboard-nav></app-dashboard-nav>
+
+<div class="p-4 space-y-4">
+	<!-- Date Navigation -->
+	<div class="flex flex-wrap items-center gap-4 justify-center">
+		<button (click)="changeDate(-1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow">
+			← Previous Day
+		</button>
+
+		<input type="date" [(ngModel)]="selectedDate"
+			class="border p-2 rounded shadow text-center flex-1 max-w-[200px] min-w-[80px]" />
+
+		<button (click)="changeDate(1)" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow">
+			Next Day →
+		</button>
+	</div>
+
+	<div class="flex flex-col gap-6 lg:flex-row lg:flex-wrap lg:justify-center">
+		<!-- Loop through unique user names -->
+		<div *ngFor="let user of getUniqueUsers()"
+			class="w-full lg:w-[calc(50%-0.75rem)] xl:w-[calc(33.333%-0.75rem)] shadow-2xl rounded-2xl">
+			<h2 class="bg-gray-100 text-center p-2 font-semibold rounded-t-2xl">
+				{{ user.name }}
+			</h2>
+
+			<div class="relative h-[840px] border-t border-gray-300 bg-white rounded-b-2xl">
+				<!-- Hour lines -->
+				<div *ngFor="let hour of hours"
+					class="absolute left-0 right-0 border-t border-dashed border-gray-200 text-xs text-gray-400"
+					[style.top.px]="(hour - 8) * 60">
+					<span class="ml-2 mt-2">{{ hour }}:00</span>
+				</div>
+
+				<!-- Bookings -->
+				<div *ngFor="let booking of getUserBookingsForDate(user.id)"
+					class="ml-10 absolute left-2 right-2 bg-blue-500 border-gray-300 border-[1px] text-white p-1 text-xs overflow-hidden shadow rounded-md cursor-pointer"
+					[style.top.px]="getMinutesFromStart(booking.start_time)"
+					[style.height.px]="getDuration(booking.start_time, booking.end_time)"
+					(click)="openBookingModal(booking)">
+					<div class="font-bold truncate">
+						{{ booking.firstname }} {{ booking.lastname }}
+						({{ booking.start_time }} - {{ booking.end_time }})
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="bookingCopy" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+	(click)="closeModal()">
+	<div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full relative" (click)="$event.stopPropagation()">
+		<!-- Close Button -->
+		<button class="text-2xl absolute top-5 right-5 text-gray-500 hover:text-gray-800" (click)="closeModal()">
+			&times;
+		</button>
+
+		<h2 class="text-xl font-bold mb-4">Edit Booking</h2>
+
+		<form class="space-y-4 text-sm">
+			<div>
+				<label class="block font-semibold">First Name</label>
+				<input type="text" [(ngModel)]="bookingCopy.firstname" name="firstname"
+					class="w-full border p-2 rounded" />
+			</div>
+			<div>
+				<label class="block font-semibold">Last Name</label>
+				<input type="text" [(ngModel)]="bookingCopy.lastname" name="lastname"
+					class="w-full border p-2 rounded" />
+			</div>
+			<div>
+				<label class="block font-semibold">Email</label>
+				<input type="email" [(ngModel)]="bookingCopy.email" name="email"
+					class="w-full border p-2 rounded" />
+			</div>
+			<div>
+				<label class="block font-semibold">Phone</label>
+				<input type="tel" [(ngModel)]="bookingCopy.phone" name="phone" class="w-full border p-2 rounded" />
+			</div>
+			<div>
+				<label class="block font-semibold">Date</label>
+				<input type="date" [(ngModel)]="bookingCopy.date" name="date" class="w-full border p-2 rounded" />
+			</div>
+
+			<div class="flex gap-4">
+				<div class="flex-1">
+					<label class="block font-semibold">Start Time</label>
+					<div class="flex items-center gap-2">
+						<input type="time" [(ngModel)]="bookingCopy.start_time" name="start_time"
+							class="w-full border p-2 rounded" />
+						<div class="flex flex-col gap-1">
+							<button type="button" (click)="adjustTime('start_time', 30)"
+								class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">+</button>
+							<button type="button" (click)="adjustTime('start_time', -30)"
+								class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">−</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="flex-1">
+					<label class="block font-semibold">End Time</label>
+					<div class="flex items-center gap-2">
+						<input type="time" id="jwehkjs" [(ngModel)]="bookingCopy.end_time" name="end_time"
+							class="w-full border p-2 rounded" />
+						<div class="flex flex-col gap-1">
+							<button type="button" (click)="adjustTime('end_time', 30)"
+								class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">+</button>
+							<button type="button" (click)="adjustTime('end_time', -30)"
+								class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">−</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div>
+				<label class="block font-semibold">User</label>
+				<select [(ngModel)]="bookingCopy.user_id" name="user_id" class="w-full border p-2 rounded">
+					<option *ngFor="let artist of artists" [value]="artist.user_id">
+						{{ artist.name }}
+					</option>
+				</select>
+			</div>
+			<div>
+				<label class="block font-semibold">Service</label>
+				<input type="text" [(ngModel)]="bookingCopy.service_id" name="service_id"
+					class="w-full border p-2 rounded" />
+			</div>
+
+			<div class="flex justify-between pt-4 space-x-4">
+				<button type="button" class="px-4 bg-red-500 cursor-pointer text-white py-2 rounded hover:bg-red-800"
+					(click)="deleteBooking(bookingCopy.booking_id)">
+					Delete
+				</button>
+				<button type="button" class="px-4 bg-blue-500 cursor-pointer text-white py-2 rounded hover:bg-blue-600"
+					(click)="saveBookingChanges()">
+					Save
+				</button>
+			</div>			
+		</form>
+	</div>
+</div>

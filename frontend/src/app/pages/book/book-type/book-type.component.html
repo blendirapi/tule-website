@@ -1,0 +1,23 @@
+<h2 class="text-xl font-semibold mb-6">Επιλέξτε Υπηρεσία</h2>
+
+<div class="flex justify-center gap-4">
+    <!-- Option 1 -->
+    <label>
+        <input type="radio" name="haircut" class="hidden peer" (click)="selectOption('1')" />
+        <div
+            class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden">
+            <img src="head.svg" alt="Κούρεμα" class="h-28 w-16 object-cover mb-1">
+            <span class="text-sm">Κούρεμα</span>
+        </div>
+    </label>
+
+    <!-- Option 2 -->
+    <label>
+        <input type="radio" name="haircut" class="hidden peer" (click)="selectOption('2')" />
+        <div
+            class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden">
+            <img src="head_and_beard.svg" alt="Κούρεμα" class="h-28 w-16 object-cover mb-1">
+            <span class="text-sm">Κούρεμα & Γενιάδα</span>
+        </div>
+    </label>
+</div>

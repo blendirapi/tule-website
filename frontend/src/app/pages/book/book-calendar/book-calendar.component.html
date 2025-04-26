@@ -1,0 +1,21 @@
+<h2 class="text-xl font-semibold">Επιλέξτε Ημερομηνία</h2>
+
+<div class="calendar-container" *ngIf="dateAvailabilities.length">
+	<mat-calendar 
+		[minDate]="minDate"
+		[maxDate]="maxDate"
+		[dateFilter]="dateFilter"
+		[dateClass]="getDateClass"
+		(selectedChange)="onDateSelected($event)">
+	</mat-calendar>
+</div>
+
+
+<div *ngIf="selectedDate" class="pt-4">
+    <p>Επιλογή Ραντεβού για <strong>{{ selectedDate | date:'fullDate' }}</strong></p>
+    <button 
+        class="w-full bg-black text-white py-2 px-4 mt-5 rounded-md hover:bg-gray-800 transition-colors cursor-pointer"
+        (click)="proceedWithDate()">
+        Επόμενο
+    </button>
+</div>
