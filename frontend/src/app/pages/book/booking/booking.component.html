@@ -13,20 +13,23 @@
         
         <app-book-type
             *ngIf="selectedArtist && !selectedService" 
-            (optionSelected)="onServiceSelected($event)">
+            (optionSelected)="onServiceSelected($event)"
+            (back)="onBackFromType()">
         </app-book-type>
         
         <app-book-calendar 
             *ngIf="selectedArtist && selectedService && !selectedDate"
             [selectedArtist]="selectedArtist"
-            (dateSelected)="onDateSelected($event)">
+            (dateSelected)="onDateSelected($event)"
+            (back)="onBackFromDate()">
         </app-book-calendar>
         
         <app-book-time 
             *ngIf="selectedArtist && selectedService && selectedDate && !selectedTime"
             [selectedArtist]="selectedArtist"
             [selectedDate]="selectedDate"
-            (timeSelected)="onTimeSelected($event)">
+            (timeSelected)="onTimeSelected($event)"
+            (back)="onBackFromTime()">
         </app-book-time>
         
         <app-book-data
@@ -35,7 +38,8 @@
             [selectedService]="selectedService"
             [selectedDate]="selectedDate"
             [selectedTime]="selectedTime"
-            (formSubmitted)="onFormSubmitted($event)">
+            (formSubmitted)="onFormSubmitted($event)"
+            (back)="onBackFromData()">
         </app-book-data>
         
         <app-book-final

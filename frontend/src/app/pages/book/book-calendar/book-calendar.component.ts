@@ -37,6 +37,7 @@ export class BookCalendarComponent implements OnInit {
 	@Input() serviceType: string = '';
 	@Input() selectedArtist: string | null = null;
 	@Output() dateSelected = new EventEmitter<Date>();
+	@Output() back = new EventEmitter<void>();
 
 	constructor(
 		private dateAdapter: DateAdapter<Date>,
@@ -120,12 +121,12 @@ export class BookCalendarComponent implements OnInit {
 	};
 
 	onDateSelected(date: Date | null): void {
-		this.selectedDate = date;
-	}
-
-	proceedWithDate(): void {
-		if (this.selectedDate) {
-			this.dateSelected.emit(this.selectedDate);
+		if (date) {
+			this.dateSelected.emit(date);
 		}
-	}
+	}	
+
+	goBack(): void {
+        this.back.emit();
+    }   
 }

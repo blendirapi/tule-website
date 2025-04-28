@@ -1,3 +1,9 @@
+<button
+	class="flex items-center text-sm bg-gray-200 hover:bg-gray-400 text-black font-medium py-2 px-4 rounded cursor-pointer transition mb-4"
+	(click)="goBack()">
+	<span class="text-lg">←</span> Πίσω
+</button>
+
 <h2 class="text-xl font-semibold">Επιλέξτε Ημερομηνία</h2>
 
 <div class="calendar-container" *ngIf="dateAvailabilities.length">
@@ -8,14 +14,4 @@
 		[dateClass]="getDateClass"
 		(selectedChange)="onDateSelected($event)">
 	</mat-calendar>
-</div>
-
-
-<div *ngIf="selectedDate" class="pt-4">
-    <p>Επιλογή Ραντεβού για <strong>{{ selectedDate | date:'fullDate' }}</strong></p>
-    <button 
-        class="w-full bg-black text-white py-2 px-4 mt-5 rounded-md hover:bg-gray-800 transition-colors cursor-pointer"
-        (click)="proceedWithDate()">
-        Επόμενο
-    </button>
 </div>

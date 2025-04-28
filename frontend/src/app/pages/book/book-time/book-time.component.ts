@@ -19,6 +19,7 @@ export class BookTimeComponent implements OnInit {
     @Input() selectedDate!: Date;
     @Input() selectedArtist: string | null = null;
     @Output() timeSelected = new EventEmitter<string>();
+    @Output() back = new EventEmitter<void>();
 
     timeSlots: string[] = [];
 
@@ -62,4 +63,8 @@ export class BookTimeComponent implements OnInit {
 
         return `${year}-${month}-${day}`;
     }
+
+    goBack(): void {
+        this.back.emit();
+    }    
 }

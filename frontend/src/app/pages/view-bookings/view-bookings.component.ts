@@ -10,6 +10,11 @@ interface Artist {
 	name: string;
 }
 
+interface Service {
+	service_id: number;
+	name: string;
+}
+
 interface Booking {
 	booking_id: number;
 	firstname: string;
@@ -22,6 +27,8 @@ interface Booking {
 	service_id: number;
 	user_id: number;
 	user_name: string;
+	service_name: string;
+	service_color: string;
 }
 
 @Component({
@@ -32,9 +39,9 @@ interface Booking {
 })
 export class DailyCalendarComponent implements OnInit {
 	selectedBooking: Booking | null = null;
-	bookingCopy: Booking | null = null;
 	bookings: Booking[] = [];
 	artists: Artist[] = [];
+	services: Service[] = [];
 	hours = Array.from({ length: 14 }, (_, i) => i + 8);
 	selectedDate = format(new Date(), 'yyyy-MM-dd');
 
@@ -43,6 +50,7 @@ export class DailyCalendarComponent implements OnInit {
 	ngOnInit() {
 		this.loadBookings();
 		this.loadArtists();
+		this.loadServices();
 	}
 
 	loadBookings() {
@@ -63,6 +71,17 @@ export class DailyCalendarComponent implements OnInit {
 			},
 			error: (error) => {
 				console.error('Failed to load artists', error);
+			}
+		});
+	}
+
+	loadServices() {
+		this.http.get<Service[]>('/v0/api/services').subscribe({
+			next: (data) => {
+				this.services = data;
+			},
+			error: (error) => {
+				console.error('Failed to load services', error);
 			}
 		});
 	}
@@ -95,23 +114,19 @@ export class DailyCalendarComponent implements OnInit {
 	}
 
 	openBookingModal(booking: Booking) {
-		this.selectedBooking = booking;
-		this.bookingCopy = { ...booking };
+		this.selectedBooking = {...booking};
 
-		if (this.bookingCopy?.date) {
-			this.bookingCopy.date = format(new Date(this.bookingCopy.date), 'yyyy-MM-dd');
+		if (this.selectedBooking?.date) {
+			this.selectedBooking.date = format(new Date(this.selectedBooking.date), 'yyyy-MM-dd');
 		}
 	}
 
 	closeModal() {
 		this.selectedBooking = null;
-		this.bookingCopy = null;
 	}
 
 	saveBookingChanges() {
-		if (this.selectedBooking && this.bookingCopy) {
-			Object.assign(this.selectedBooking, this.bookingCopy);
-	
+		if (this.selectedBooking) {
 			const updatedBooking = {
 				artist: this.selectedBooking.user_id.toString(),
 				service: this.selectedBooking.service_id.toString(),
@@ -127,7 +142,7 @@ export class DailyCalendarComponent implements OnInit {
 				headers: { 'Content-Type': 'application/json' }
 			})
 			.subscribe({
-				next: (response) => {
+				next: () => {
 					this.closeModal();
 					this.loadBookings();
 				},
@@ -142,7 +157,7 @@ export class DailyCalendarComponent implements OnInit {
 	deleteBooking(id: number) {
 		this.http.delete(`/v0/api/bookings/${id}`)
 			.subscribe({
-				next: (response) => {
+				next: () => {
 					this.closeModal();
 					this.loadBookings();
 				},
@@ -170,6 +185,8 @@ export class DailyCalendarComponent implements OnInit {
 
 	getUniqueUsers() {
 		const users = this.bookings.map(b => ({ id: b.user_id, name: b.user_name }));
-		return [...new Set(users.map(user => JSON.stringify(user)))].map(user => JSON.parse(user));
-	}
+		const uniqueUsers = [...new Set(users.map(user => JSON.stringify(user)))].map(user => JSON.parse(user));
+		uniqueUsers.sort((a, b) => a.id - b.id);
+		return uniqueUsers;
+	}	
 }

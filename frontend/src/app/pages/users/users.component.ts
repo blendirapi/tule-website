@@ -5,12 +5,12 @@ import { CommonModule } from '@angular/common';
 import { DashboardNavComponent } from '../../components/dashboard-nav/dashboard-nav.component';
 
 @Component({
-	selector: 'app-dashboard',
+	selector: 'app-users',
 	standalone: true,
 	imports: [CommonModule, FormsModule, DashboardNavComponent],
-	templateUrl: './dashboard.component.html',
+	templateUrl: './users.component.html',
 })
-export class DashboardComponent implements OnInit {
+export class UsersComponent implements OnInit {
 	users: any[] = [];
 	form = { user_id: null, name: '', username: '', password: '' };
 	isEditing = false;
@@ -28,7 +28,7 @@ export class DashboardComponent implements OnInit {
 	}
 
 	saveUser() {
-		const apiUrl = this.isEditing ? `/v0/api/users/${this.form.user_id}` : '/v0/api/users';
+		const apiUrl = this.isEditing ? `/v0/api/user/${this.form.user_id}` : '/v0/api/users';
 		const method = this.isEditing ? 'put' : 'post';
 
 		this.http[method](apiUrl, this.form).subscribe(() => {
@@ -44,7 +44,7 @@ export class DashboardComponent implements OnInit {
 
 	deleteUser(userId: number) {
 		if (confirm('Are you sure you want to delete this user?')) {
-			this.http.delete(`/v0/api/users/${userId}`).subscribe(() => this.loadUsers());
+			this.http.delete(`/v0/api/user/${userId}`).subscribe(() => this.loadUsers());
 		}
 	}
 

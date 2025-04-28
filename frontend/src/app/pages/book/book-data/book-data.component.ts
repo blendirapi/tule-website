@@ -40,6 +40,7 @@ export class BookDataComponent implements OnInit {
   @Input() selectedTime: string | null = null;
 
   @Output() formSubmitted = new EventEmitter<boolean>();
+  @Output() back = new EventEmitter<void>();
 
   firstName: string = '';
   lastName: string = '';
@@ -118,4 +119,8 @@ export class BookDataComponent implements OnInit {
         }
       });
   }
+
+  goBack(): void {
+    this.back.emit();
+}   
 }

@@ -53,4 +53,20 @@ export class BookingComponent {
       this.bookingComplete = true;
     }
   }
+
+  onBackFromType(): void {
+    this.selectedArtist = null;
+  }
+  
+  onBackFromDate(): void {
+    this.selectedService = null;
+  }
+  
+  onBackFromTime(): void {
+    this.selectedDate = null;
+  }
+
+  onBackFromData(): void {
+    this.selectedTime = null;
+  }  
 }

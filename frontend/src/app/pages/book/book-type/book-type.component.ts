@@ -8,8 +8,13 @@ import { Component, Output, EventEmitter } from '@angular/core';
 })
 export class BookTypeComponent {
   @Output() optionSelected = new EventEmitter<string>();
+  @Output() back = new EventEmitter<void>();
 
   selectOption(option: string) {
     this.optionSelected.emit(option);
   }
+
+  goBack(): void {
+    this.back.emit();
+}   
 }

@@ -25,6 +25,12 @@ type User struct {
 	Username string `json:"username"`
 }
 
+type Service struct {
+	ServiceID int    `json:"service_id"`
+	Name      string `json:"name"`
+	Color     string `json:"color"`
+}
+
 type LoginResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
@@ -77,24 +83,28 @@ type AvailableTimesMonthlyResponse struct {
 }
 
 type Booking struct {
-	BookingID int    `json:"booking_id"`
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone"`
-	Date      string `json:"date"`
-	StartTime string `json:"start_time"`
-	EndTime   string `json:"end_time"`
-	ServiceID int    `json:"service_id"`
-	UserID    int    `json:"user_id"`
-	UserName  string `json:"user_name"`
+	BookingID    int    `json:"booking_id"`
+	FirstName    string `json:"firstname"`
+	LastName     string `json:"lastname"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	Date         string `json:"date"`
+	StartTime    string `json:"start_time"`
+	EndTime      string `json:"end_time"`
+	ServiceID    int    `json:"service_id"`
+	UserID       int    `json:"user_id"`
+	UserName     string `json:"user_name"`
+	ServiceName  string `json:"service_name"`
+	ServiceColor string `json:"service_color"`
 }
 
 func main() {
 	cors := corsMiddleware
 	http.Handle("/v0/api/login", cors(http.HandlerFunc(loginHandler)))
 	http.Handle("/v0/api/users", cors(http.HandlerFunc(usersHandler)))
-	http.Handle("/v0/api/users/", cors(http.HandlerFunc(userHandler)))
+	http.Handle("/v0/api/user/", cors(http.HandlerFunc(userHandler)))
+	http.Handle("/v0/api/services", cors(http.HandlerFunc(servicesHandler)))
+	http.Handle("/v0/api/service/", cors(http.HandlerFunc(serviceHandler)))
 	http.Handle("/v0/api/artists", cors(http.HandlerFunc(artistsHandler)))
 	http.Handle("/v0/api/service_artist_names", cors(http.HandlerFunc(serviceArtistHandler)))
 	http.Handle("/v0/api/add_booking", cors(http.HandlerFunc(createBookingHandler)))
@@ -176,7 +186,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		rows, err := db.Query("SELECT user_id, name, username FROM users")
+		rows, err := db.Query("SELECT user_id, name, username FROM users ORDER BY user_id")
 		if err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
@@ -212,7 +222,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func userHandler(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/v0/api/users/")
+	id := strings.TrimPrefix(r.URL.Path, "/v0/api/user/")
 	if id == "" {
 		http.Error(w, `{"success":false}`, http.StatusBadRequest)
 		return
@@ -252,6 +262,92 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodDelete:
 		if _, err := db.Exec("DELETE FROM users WHERE user_id=$1", id); err != nil {
+			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte(`{"success":true}`))
+
+	default:
+		http.Error(w, `{"success":false}`, http.StatusMethodNotAllowed)
+	}
+}
+
+func servicesHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := dbConn()
+	if err != nil {
+		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	switch r.Method {
+	case http.MethodGet:
+		rows, err := db.Query("SELECT service_id, name, color FROM services ORDER BY service_id")
+		if err != nil {
+			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var services []Service
+		for rows.Next() {
+			var s Service
+			if rows.Scan(&s.ServiceID, &s.Name, &s.Color) == nil {
+				services = append(services, s)
+			}
+		}
+		json.NewEncoder(w).Encode(services)
+
+	case http.MethodPost:
+		var s struct{ Name, Color string }
+		if json.NewDecoder(r.Body).Decode(&s) != nil {
+			http.Error(w, `{"success":false}`, http.StatusBadRequest)
+			return
+		}
+
+		_, err = db.Exec("INSERT INTO services (name, color) VALUES ($1, $2)", s.Name, s.Color)
+		if err != nil {
+			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte(`{"success":true}`))
+
+	default:
+		http.Error(w, `{"success":false}`, http.StatusMethodNotAllowed)
+	}
+}
+
+func serviceHandler(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimPrefix(r.URL.Path, "/v0/api/service/")
+	if id == "" {
+		http.Error(w, `{"success":false}`, http.StatusBadRequest)
+		return
+	}
+
+	db, err := dbConn()
+	if err != nil {
+		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	switch r.Method {
+	case http.MethodPut:
+		var s Service
+		if json.NewDecoder(r.Body).Decode(&s) != nil {
+			http.Error(w, `{"success":false}`, http.StatusBadRequest)
+			return
+		}
+
+		_, err = db.Exec("UPDATE services SET name=$1, color=$2 WHERE service_id=$3", s.Name, s.Color, s.ServiceID)
+		if err != nil {
+			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte(`{"success":true}`))
+
+	case http.MethodDelete:
+		if _, err := db.Exec("DELETE FROM services WHERE service_id=$1", id); err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
 		}
@@ -587,17 +683,17 @@ func getBookingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	query := `
+	rows, err := db.Query(`
 		SELECT 
 			b.booking_id, b.firstname, b.lastname, b.email, b.phone, 
 			b.date, b.start_time, b.end_time, b.service_id, 
-			u.user_id, u.name
+			u.user_id, u.name, s.name, s.color
 		FROM bookings b
 		JOIN users u ON u.user_id = b.user_id
+		JOIN services s ON s.service_id = b.service_id
 		ORDER BY b.date, b.start_time ASC
-	`
+	`)
 
-	rows, err := db.Query(query)
 	if err != nil {
 		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 		return
@@ -610,7 +706,7 @@ func getBookingsHandler(w http.ResponseWriter, r *http.Request) {
 		err := rows.Scan(
 			&b.BookingID, &b.FirstName, &b.LastName, &b.Email, &b.Phone,
 			&b.Date, &b.StartTime, &b.EndTime, &b.ServiceID,
-			&b.UserID, &b.UserName,
+			&b.UserID, &b.UserName, &b.ServiceName, &b.ServiceColor,
 		)
 		if err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
@@ -654,7 +750,7 @@ func bookingHandler(w http.ResponseWriter, r *http.Request) {
 		query := `UPDATE bookings SET user_id=$1, service_id=$2, date=$3, start_time=$4,
 					end_time=$5, firstname=$6, lastname=$7, phone=$8, email=$9 
 		          WHERE booking_id=$10`
-		_, err = db.Exec(query, b.Artist, b.Service, b.Date, timeParts[0], timeParts[1], b.FirstName, 
+		_, err = db.Exec(query, b.Artist, b.Service, b.Date, timeParts[0], timeParts[1], b.FirstName,
 			b.LastName, b.Phone, b.Email, id)
 		if err != nil {
 			http.Error(w, fmt.Sprintf(`{"success":false, "error": "%s"}`, err.Error()), http.StatusInternalServerError)
