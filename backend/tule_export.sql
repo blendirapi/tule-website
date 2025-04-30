@@ -29,7 +29,7 @@ CREATE DATABASE tuledb WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVID
 
 ALTER DATABASE tuledb OWNER TO postgres;
 
-\connect tuledb
+connect tuledb
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;

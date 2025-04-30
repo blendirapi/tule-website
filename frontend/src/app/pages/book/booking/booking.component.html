@@ -1,51 +1,75 @@
 <app-header></app-header>
 
-<main class="flex flex-col items-center py-10 px-4 space-y-6 bg-black">
-    <p class="text-center text-sm text-gray-300 max-w-sm">
-        Τα ραντεβού για tattoo και piercing κλείνονται αποκλειστικά μέσω Instagram ή τηλεφωνικά.
-    </p>
+<main
+  class="min-h-[70vh] flex flex-col items-center py-10 px-4 space-y-6 bg-black"
+>
+  <p class="text-center text-sm text-gray-300 max-w-sm mb-10 sm:mt-8">
+    Τα ραντεβού για tattoo και piercing κλείνονται αποκλειστικά μέσω Instagram ή
+    τηλεφωνικά.
+  </p>
 
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-lg text-center space-y-6 text-black">
-        <app-book-artist
-            *ngIf="!selectedArtist" 
-            (artistSelected)="onArtistSelected($event)">
-        </app-book-artist>
-        
-        <app-book-type
-            *ngIf="selectedArtist && !selectedService" 
-            (optionSelected)="onServiceSelected($event)"
-            (back)="onBackFromType()">
-        </app-book-type>
-        
-        <app-book-calendar 
-            *ngIf="selectedArtist && selectedService && !selectedDate"
-            [selectedArtist]="selectedArtist"
-            (dateSelected)="onDateSelected($event)"
-            (back)="onBackFromDate()">
-        </app-book-calendar>
-        
-        <app-book-time 
-            *ngIf="selectedArtist && selectedService && selectedDate && !selectedTime"
-            [selectedArtist]="selectedArtist"
-            [selectedDate]="selectedDate"
-            (timeSelected)="onTimeSelected($event)"
-            (back)="onBackFromTime()">
-        </app-book-time>
-        
-        <app-book-data
-            *ngIf="selectedArtist && selectedService && selectedDate && selectedTime && !bookingComplete"
-            [selectedArtist]="selectedArtist"
-            [selectedService]="selectedService"
-            [selectedDate]="selectedDate"
-            [selectedTime]="selectedTime"
-            (formSubmitted)="onFormSubmitted($event)"
-            (back)="onBackFromData()">
-        </app-book-data>
-        
-        <app-book-final
-            *ngIf="bookingComplete">
-        </app-book-final>
-    </div>
+  <div
+    class="bg-white rounded-2xl p-4 md:p-6 w-full shadow-lg text-center space-y-6 text-black max-w-max min-w-[330px] sm:min-w-[390px] mx-auto"
+  >
+    <app-book-artist
+      *ngIf="!selectedArtist"
+      (artistSelected)="onArtistSelected($event)"
+    >
+    </app-book-artist>
+
+    <app-book-type
+      *ngIf="selectedArtist && !selectedService"
+      (optionSelected)="onServiceSelected($event)"
+      (back)="onBackFromType()"
+    >
+    </app-book-type>
+
+    <app-book-calendar
+      *ngIf="selectedArtist && selectedService && !selectedDate"
+      [selectedArtist]="selectedArtist"
+      (dateSelected)="onDateSelected($event)"
+      (back)="onBackFromDate()"
+    >
+    </app-book-calendar>
+
+    <app-book-time
+      *ngIf="selectedArtist && selectedService && selectedDate && !selectedTime"
+      [selectedArtist]="selectedArtist"
+      [selectedDate]="selectedDate"
+      (timeSelected)="onTimeSelected($event)"
+      (back)="onBackFromTime()"
+    >
+    </app-book-time>
+
+    <app-book-data
+      *ngIf="
+        selectedArtist &&
+        selectedService &&
+        selectedDate &&
+        selectedTime &&
+        !bookingComplete
+      "
+      [selectedArtist]="selectedArtist"
+      [selectedService]="selectedService"
+      [selectedDate]="selectedDate"
+      [selectedTime]="selectedTime"
+      (formSubmitted)="onFormSubmitted($event)"
+      (back)="onBackFromData()"
+    >
+    </app-book-data>
+
+    <app-book-final *ngIf="bookingComplete"> </app-book-final>
+  </div>
+
+  <button
+    class="mt-4 flex items-center gap-1 text-sm font-medium bg-white text-black rounded-xl border-2 border-white px-6 py-1 cursor-pointer lg:hover:bg-black lg:hover:text-white transition-all duration-200 group"
+  >
+    <span
+      class="text-lg mb-1 group-hover:translate-x-[-5px] transition-all duration-200"
+      >←</span
+    >
+    Πίσω
+  </button>
 </main>
 
 <app-footer></app-footer>

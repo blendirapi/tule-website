@@ -1,47 +1,90 @@
 <button
-	class="flex items-center text-sm bg-gray-200 hover:bg-gray-400 text-black font-medium py-2 px-4 rounded cursor-pointer transition mb-4"
-	(click)="goBack()">
-	<span class="text-lg">←</span> Πίσω
+  class="flex items-center gap-1 text-sm bg-gray-200 hover:bg-gray-400 text-black font-medium py-2 px-4 rounded cursor-pointer mb-4 group"
+  (click)="goBack()"
+>
+  <span
+    class="text-lg mb-1 group-hover:translate-x-[-5px] transition-all duration-200"
+    >←</span
+  >
+  Πίσω
 </button>
 
 <form (ngSubmit)="onSubmit()" #bookingForm="ngForm">
-    <div class="text-left mb-4">
-        <p><strong>Κουρέας:</strong> {{artistName}}</p>
-        <p><strong>Υπηρεσία:</strong> {{serviceName}}</p>
-        <p><strong>Ημερομηνία:</strong> {{ selectedDate | date:'fullDate' }}</p>
-        <p><strong>Ώρα:</strong> {{selectedTime}}</p>
+  <div class="text-left mb-4">
+    <p><strong>Κουρέας:</strong> {{ artistName }}</p>
+    <p><strong>Υπηρεσία:</strong> {{ serviceName }}</p>
+    <p><strong>Ημερομηνία:</strong> {{ selectedDate | date : "fullDate" }}</p>
+    <p><strong>Ώρα:</strong> {{ selectedTime }}</p>
+  </div>
+
+  <div class="space-y-4">
+    <div class="text-left">
+      <label for="firstName" class="block text-sm font-medium text-gray-700"
+        >*Όνομα</label
+      >
+      <input
+        type="text"
+        id="firstName"
+        name="firstName"
+        [(ngModel)]="firstName"
+        required
+        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
+      />
     </div>
 
-    <div class="space-y-4">
-        <div class="text-left">
-            <label for="firstName" class="block text-sm font-medium text-gray-700">*Όνομα</label>
-            <input type="text" id="firstName" name="firstName" [(ngModel)]="firstName" required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500">
-        </div>
-
-        <div class="text-left">
-            <label for="lastName" class="block text-sm font-medium text-gray-700">*Επώνυμο</label>
-            <input type="text" id="lastName" name="lastName" [(ngModel)]="lastName" required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500">
-        </div>
-
-        <div class="text-left">
-            <label for="phone" class="block text-sm font-medium text-gray-700">*Τηλέφωνο</label>
-            <input type="tel" id="phone" name="phone" [(ngModel)]="phone" required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500">
-        </div>
-
-        <div class="text-left">
-            <label for="email" class="block text-sm font-medium text-gray-700">*Email</label>
-            <input type="email" id="email" name="email" [(ngModel)]="email" required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500">
-        </div>
+    <div class="text-left">
+      <label for="lastName" class="block text-sm font-medium text-gray-700"
+        >*Επώνυμο</label
+      >
+      <input
+        type="text"
+        id="lastName"
+        name="lastName"
+        [(ngModel)]="lastName"
+        required
+        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
+      />
     </div>
 
-    <button type="submit" [disabled]="!bookingForm.form.valid" [ngClass]="{
-            'bg-black text-white hover:bg-gray-800 cursor-pointer': bookingForm.form.valid,
-            'bg-gray-400 text-gray-600 cursor-not-allowed': !bookingForm.form.valid
-        }" class="w-full py-2 px-4 mt-5 rounded-md transition-colors">
-        Κράτηση
-    </button>
+    <div class="text-left">
+      <label for="phone" class="block text-sm font-medium text-gray-700"
+        >*Τηλέφωνο</label
+      >
+      <input
+        type="tel"
+        id="phone"
+        name="phone"
+        [(ngModel)]="phone"
+        required
+        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
+      />
+    </div>
+
+    <div class="text-left">
+      <label for="email" class="block text-sm font-medium text-gray-700"
+        >*Email</label
+      >
+      <input
+        type="email"
+        id="email"
+        name="email"
+        [(ngModel)]="email"
+        required
+        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
+      />
+    </div>
+  </div>
+
+  <button
+    type="submit"
+    [disabled]="!bookingForm.form.valid"
+    [ngClass]="{
+      'bg-black text-white hover:bg-gray-800 cursor-pointer':
+        bookingForm.form.valid,
+      'bg-gray-400 text-gray-600 cursor-not-allowed': !bookingForm.form.valid
+    }"
+    class="w-full py-2 px-4 mt-5 rounded-md transition-colors"
+  >
+    Κράτηση
+  </button>
 </form>

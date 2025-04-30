@@ -1,29 +1,50 @@
-<button
-	class="flex items-center text-sm bg-gray-200 hover:bg-gray-400 text-black font-medium py-2 px-4 rounded cursor-pointer transition mb-4"
-	(click)="goBack()">
-	<span class="text-lg">←</span> Πίσω
-</button>
-
 <h2 class="text-xl font-semibold mb-6">Επιλέξτε Υπηρεσία</h2>
 
 <div class="flex justify-center gap-4">
-    <!-- Option 1 -->
-    <label>
-        <input type="radio" name="haircut" class="hidden peer" (click)="selectOption('1')" />
-        <div
-            class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden">
-            <img src="head.svg" alt="Κούρεμα" class="h-28 w-16 object-cover mb-1">
-            <span class="text-sm">Κούρεμα</span>
-        </div>
-    </label>
+  <!-- Option 1 -->
+  <label>
+    <input
+      type="radio"
+      name="haircut"
+      class="hidden peer"
+      (click)="selectOption('1')"
+    />
+    <div
+      class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-32 sm:w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden"
+    >
+      <img src="head.svg" alt="Κούρεμα" class="h-28 w-16 object-cover mb-1" />
+      <span class="text-sm">Κούρεμα</span>
+    </div>
+  </label>
 
-    <!-- Option 2 -->
-    <label>
-        <input type="radio" name="haircut" class="hidden peer" (click)="selectOption('2')" />
-        <div
-            class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden">
-            <img src="head_and_beard.svg" alt="Κούρεμα" class="h-28 w-16 object-cover mb-1">
-            <span class="text-sm">Κούρεμα & Γενιάδα</span>
-        </div>
-    </label>
+  <!-- Option 2 -->
+  <label>
+    <input
+      type="radio"
+      name="haircut"
+      class="hidden peer"
+      (click)="selectOption('2')"
+    />
+    <div
+      class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-32 sm:w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden"
+    >
+      <img
+        src="head_and_beard.svg"
+        alt="Κούρεμα"
+        class="h-28 w-16 object-cover mb-1"
+      />
+      <span class="text-sm">Κούρεμα & Γενιάδα</span>
+    </div>
+  </label>
 </div>
+
+<!-- <button
+  class="flex items-center gap-1 text-sm border-2 border-black text-black font-medium my-6 mx-auto py-2 px-4 rounded cursor-pointer mb-4 group"
+  (click)="goBack()"
+>
+  <span
+    class="text-lg mb-1 group-hover:translate-x-[-5px] transition-all duration-200"
+    >←</span
+  >
+  Πίσω
+</button> -->
