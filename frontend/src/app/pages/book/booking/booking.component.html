@@ -20,7 +20,6 @@
     <app-book-type
       *ngIf="selectedArtist && !selectedService"
       (optionSelected)="onServiceSelected($event)"
-      (back)="onBackFromType()"
     >
     </app-book-type>
 
@@ -28,7 +27,6 @@
       *ngIf="selectedArtist && selectedService && !selectedDate"
       [selectedArtist]="selectedArtist"
       (dateSelected)="onDateSelected($event)"
-      (back)="onBackFromDate()"
     >
     </app-book-calendar>
 
@@ -37,7 +35,6 @@
       [selectedArtist]="selectedArtist"
       [selectedDate]="selectedDate"
       (timeSelected)="onTimeSelected($event)"
-      (back)="onBackFromTime()"
     >
     </app-book-time>
 
@@ -54,16 +51,16 @@
       [selectedDate]="selectedDate"
       [selectedTime]="selectedTime"
       (formSubmitted)="onFormSubmitted($event)"
-      (back)="onBackFromData()"
     >
     </app-book-data>
 
     <app-book-final *ngIf="bookingComplete"> </app-book-final>
   </div>
 
-  <button
+  <button *ngIf="selectedArtist && !bookingComplete"
     class="mt-4 flex items-center gap-1 text-sm font-medium bg-white text-black rounded-xl border-2 border-white px-6 py-1 cursor-pointer lg:hover:bg-black lg:hover:text-white transition-all duration-200 group"
-  >
+    (click)="goBack()"
+    >
     <span
       class="text-lg mb-1 group-hover:translate-x-[-5px] transition-all duration-200"
       >←</span

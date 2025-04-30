@@ -33,11 +33,11 @@ export class BookCalendarComponent implements OnInit {
 	maxDate: Date = new Date();
 	selectedDate: Date | null = null;
 	dateAvailabilities: DateAvailability[] = [];
+	isLoading: boolean = true;
 
 	@Input() serviceType: string = '';
 	@Input() selectedArtist: string | null = null;
 	@Output() dateSelected = new EventEmitter<Date>();
-	@Output() back = new EventEmitter<void>();
 
 	constructor(
 		private dateAdapter: DateAdapter<Date>,
@@ -67,6 +67,7 @@ export class BookCalendarComponent implements OnInit {
 				next: (response) => {
 					if (response.success && response.classes) {
 						this.processAvailabilityData(response.classes);
+						this.isLoading = false;
 					}
 				},
 				error: (error) => {
@@ -125,8 +126,4 @@ export class BookCalendarComponent implements OnInit {
 			this.dateSelected.emit(date);
 		}
 	}	
-
-	goBack(): void {
-        this.back.emit();
-    }   
 }

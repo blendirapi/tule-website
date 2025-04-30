@@ -19,9 +19,9 @@ export class BookTimeComponent implements OnInit {
     @Input() selectedDate!: Date;
     @Input() selectedArtist: string | null = null;
     @Output() timeSelected = new EventEmitter<string>();
-    @Output() back = new EventEmitter<void>();
 
     timeSlots: string[] = [];
+    isLoading: boolean = true;
 
     constructor(private http: HttpClient) { }
 
@@ -46,6 +46,7 @@ export class BookTimeComponent implements OnInit {
             .subscribe((response) => {
                 if (response.success) {
                     this.timeSlots = response.times || [];
+                    this.isLoading = false;
                 }
             });
     }
@@ -63,8 +64,4 @@ export class BookTimeComponent implements OnInit {
 
         return `${year}-${month}-${day}`;
     }
-
-    goBack(): void {
-        this.back.emit();
-    }    
 }

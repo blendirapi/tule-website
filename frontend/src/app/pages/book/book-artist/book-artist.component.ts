@@ -19,6 +19,7 @@ export class BookArtistComponent {
   @Output() artistSelected = new EventEmitter<string>();
   artists: Artist[] = [];
   selectedArtist: string | null = null;
+  isLoading: boolean = true;
 
   constructor(private http: HttpClient) { }
 
@@ -42,6 +43,7 @@ export class BookArtistComponent {
       .subscribe({
         next: (response) => {
           this.artists = Array.isArray(response) ? response : [];
+          this.isLoading = false;
         }
       });
   }

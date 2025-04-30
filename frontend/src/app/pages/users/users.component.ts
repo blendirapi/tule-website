@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import CryptoJS from 'crypto-js';
 import { DashboardNavComponent } from '../../components/dashboard-nav/dashboard-nav.component';
 
 @Component({
@@ -13,7 +14,8 @@ import { DashboardNavComponent } from '../../components/dashboard-nav/dashboard-
 export class UsersComponent implements OnInit {
 	users: any[] = [];
 	form = { user_id: null, name: '', username: '', password: '' };
-	isEditing = false;
+	isEditing: Boolean = false;
+	isSubmitting: Boolean = false;
 
 	constructor(private http: HttpClient) { }
 
@@ -24,17 +26,30 @@ export class UsersComponent implements OnInit {
 	loadUsers() {
 		this.http.get<any[]>('/v0/api/users').subscribe((data) => {
 			this.users = data;
+			this.isSubmitting = false;
 		});
 	}
 
-	saveUser() {
-		const apiUrl = this.isEditing ? `/v0/api/user/${this.form.user_id}` : '/v0/api/users';
-		const method = this.isEditing ? 'put' : 'post';
+	async saveUser() {
+		this.isSubmitting = true;
+		try {
+			const hash = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(this.form.password)).toString();
 
-		this.http[method](apiUrl, this.form).subscribe(() => {
-			this.loadUsers();
-			this.cancelEdit();
-		});
+			const userPayload = {
+				...this.form,
+				password: hash
+			};
+
+			const apiUrl = this.isEditing ? `/v0/api/user/${this.form.user_id}` : `/v0/api/users`;
+			const method = this.isEditing ? 'put' : 'post';
+
+			this.http[method](apiUrl, userPayload).subscribe(() => {
+				this.loadUsers();
+				this.cancelEdit();
+			});
+		} catch (e) {
+			console.error('Hashing failed:', e);
+		}
 	}
 
 	editUser(user: any) {
@@ -43,7 +58,7 @@ export class UsersComponent implements OnInit {
 	}
 
 	deleteUser(userId: number) {
-		if (confirm('Are you sure you want to delete this user?')) {
+		if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτόν τον χρήστη;')) {
 			this.http.delete(`/v0/api/user/${userId}`).subscribe(() => this.loadUsers());
 		}
 	}

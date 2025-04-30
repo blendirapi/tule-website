@@ -54,19 +54,15 @@ export class BookingComponent {
     }
   }
 
-  onBackFromType(): void {
-    this.selectedArtist = null;
-  }
-  
-  onBackFromDate(): void {
-    this.selectedService = null;
-  }
-  
-  onBackFromTime(): void {
-    this.selectedDate = null;
-  }
-
-  onBackFromData(): void {
-    this.selectedTime = null;
-  }  
+  goBack(): void {
+    if (this.selectedTime) {
+      this.selectedTime = null;
+    } else if (this.selectedDate) {
+      this.selectedDate = null;
+    } else if (this.selectedService) {
+      this.selectedService = null;
+    } else if (this.selectedArtist) {
+      this.selectedArtist = null;
+    }
+  } 
 }

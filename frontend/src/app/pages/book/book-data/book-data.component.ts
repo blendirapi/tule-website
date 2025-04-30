@@ -40,7 +40,6 @@ export class BookDataComponent implements OnInit {
   @Input() selectedTime: string | null = null;
 
   @Output() formSubmitted = new EventEmitter<boolean>();
-  @Output() back = new EventEmitter<void>();
 
   firstName: string = '';
   lastName: string = '';
@@ -48,6 +47,7 @@ export class BookDataComponent implements OnInit {
   email: string = '';
   serviceName: string = '';
   artistName: string = '';
+  isSubmitting : boolean = false;
 
   constructor(private http: HttpClient) { }
 
@@ -93,6 +93,7 @@ export class BookDataComponent implements OnInit {
   }
 
   onSubmit(): void {
+    this.isSubmitting = true;
     const formData: BookingFormData = {
       artist: this.selectedArtist,
       service: this.selectedService,
@@ -119,8 +120,4 @@ export class BookDataComponent implements OnInit {
         }
       });
   }
-
-  goBack(): void {
-    this.back.emit();
-}   
 }

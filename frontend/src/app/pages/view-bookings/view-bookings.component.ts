@@ -44,6 +44,7 @@ export class DailyCalendarComponent implements OnInit {
 	services: Service[] = [];
 	hours = Array.from({ length: 14 }, (_, i) => i + 8);
 	selectedDate = format(new Date(), 'yyyy-MM-dd');
+	isSubmitting: Boolean = false;
 
 	constructor(private http: HttpClient) { }
 
@@ -57,6 +58,7 @@ export class DailyCalendarComponent implements OnInit {
 		this.http.get<Booking[]>('/v0/api/get_bookings').subscribe({
 			next: (data) => {
 				this.bookings = data;
+				this.isSubmitting = false;
 			},
 			error: (error) => {
 				console.error('Failed to load bookings', error);
@@ -155,6 +157,7 @@ export class DailyCalendarComponent implements OnInit {
 	}	
 
 	deleteBooking(id: number) {
+		this.isSubmitting = true;
 		this.http.delete(`/v0/api/bookings/${id}`)
 			.subscribe({
 				next: () => {

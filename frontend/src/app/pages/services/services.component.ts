@@ -13,7 +13,8 @@ import { DashboardNavComponent } from '../../components/dashboard-nav/dashboard-
 export class ServicesComponent implements OnInit {
   services: any[] = [];
   form = { service_id: null, name: '', color: '' };
-  isEditing = false;
+  isEditing: Boolean = false;
+  isSubmitting: Boolean = false;
 
   constructor(private http: HttpClient) { }
 
@@ -24,13 +25,18 @@ export class ServicesComponent implements OnInit {
   loadServices() {
     this.http.get<any[]>('/v0/api/services').subscribe((data) => {
       this.services = data;
-      console.log('Services loaded:', this.services);
+      this.isSubmitting = false;
     });
   }
 
   saveService() {
+    this.isSubmitting = true;
     const apiUrl = this.isEditing ? `/v0/api/service/${this.form.service_id}` : '/v0/api/services';
     const method = this.isEditing ? 'put' : 'post';
+
+    if(this.form.color == '') {
+      this.form.color = '#000000';
+    }
 
     this.http[method](apiUrl, this.form).subscribe(() => {
       this.loadServices();
@@ -44,7 +50,7 @@ export class ServicesComponent implements OnInit {
   }
 
   deleteService(serviceId: number) {
-    if (confirm('Are you sure you want to delete this service?')) {
+    if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτήν την υπηρεσία;')) {
       this.http.delete(`/v0/api/service/${serviceId}`).subscribe(() => this.loadServices());
     }
   }

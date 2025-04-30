@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alexedwards/argon2id"
+	"github.com/golang-jwt/jwt"
 	_ "github.com/lib/pq"
 )
 
@@ -100,18 +102,22 @@ type Booking struct {
 
 func main() {
 	cors := corsMiddleware
+	auth := AuthMiddleware
+
 	http.Handle("/v0/api/login", cors(http.HandlerFunc(loginHandler)))
-	http.Handle("/v0/api/users", cors(http.HandlerFunc(usersHandler)))
-	http.Handle("/v0/api/user/", cors(http.HandlerFunc(userHandler)))
-	http.Handle("/v0/api/services", cors(http.HandlerFunc(servicesHandler)))
-	http.Handle("/v0/api/service/", cors(http.HandlerFunc(serviceHandler)))
 	http.Handle("/v0/api/artists", cors(http.HandlerFunc(artistsHandler)))
 	http.Handle("/v0/api/service_artist_names", cors(http.HandlerFunc(serviceArtistHandler)))
 	http.Handle("/v0/api/add_booking", cors(http.HandlerFunc(createBookingHandler)))
 	http.Handle("/v0/api/available_times", cors(http.HandlerFunc(availableTimesHandler)))
 	http.Handle("/v0/api/availability", cors(http.HandlerFunc(availableTimesMonthlyHandler)))
-	http.Handle("/v0/api/get_bookings", cors(http.HandlerFunc(getBookingsHandler)))
-	http.Handle("/v0/api/bookings/", cors(http.HandlerFunc(bookingHandler)))
+
+	http.Handle("/v0/api/get_bookings", cors(auth(http.HandlerFunc(getBookingsHandler))))
+	http.Handle("/v0/api/bookings/", cors(auth(http.HandlerFunc(bookingHandler))))
+	http.Handle("/v0/api/users", cors(auth(http.HandlerFunc(usersHandler))))
+	http.Handle("/v0/api/user/", cors(auth(http.HandlerFunc(userHandler))))
+	http.Handle("/v0/api/services", cors(auth(http.HandlerFunc(servicesHandler))))
+	http.Handle("/v0/api/service/", cors(auth(http.HandlerFunc(serviceHandler))))
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
@@ -145,6 +151,45 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+var jwtKey = []byte("your_secret_key")
+
+func generateJWT(userID int) (string, error) {
+	claims := &jwt.StandardClaims{
+		Subject:   fmt.Sprint(userID),
+		ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtKey)
+}
+
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, `{"success":false,"message":"Missing token"}`, http.StatusUnauthorized)
+			return
+		}
+
+		// Example: "Authorization <token>" — strip "Authorization " if you're using it
+		tokenString := strings.TrimSpace(authHeader)
+
+		claims := &jwt.StandardClaims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+
+		if err != nil || !token.Valid {
+			http.Error(w, `{"success":false,"message":"Invalid or expired token"}`, http.StatusUnauthorized)
+			return
+		}
+
+		// Store user ID if needed using claims.Subject (claims.Subject is userID in our case)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"success":false,"message":"Method not allowed"}`, http.StatusMethodNotAllowed)
@@ -157,6 +202,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Retrieve the user's hashed password from the database
 	db, err := dbConn()
 	if err != nil {
 		http.Error(w, `{"success":false,"message":"Database error"}`, http.StatusInternalServerError)
@@ -168,12 +214,31 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var password string
 	err = db.QueryRow("SELECT user_id, name, username, password FROM users WHERE username = $1", strings.TrimSpace(req.Username)).
 		Scan(&user.UserID, &user.Name, &user.Username, &password)
-	if err != nil || password != req.Password {
-		http.Error(w, `{"success":false,"message":"Invalid username or password"}`, http.StatusUnauthorized)
+	if err != nil {
+		http.Error(w, `{"success":false,"message":"Το όνομα χρήστη ή ο κωδικός πρόσβασης είναι λάθος"}`, http.StatusUnauthorized)
 		return
 	}
 
-	json.NewEncoder(w).Encode(LoginResponse{Success: true, Message: "Login successful", User: &user})
+	match, err := argon2id.ComparePasswordAndHash(req.Password, password)
+	if err != nil || !match {
+		http.Error(w, `{"success":false,"message":"Το όνομα χρήστη ή ο κωδικός πρόσβασης είναι λάθος"}`, http.StatusUnauthorized)
+		return
+	}
+
+	// If passwords match, generate JWT token
+	token, err := generateJWT(user.UserID)
+	if err != nil {
+		http.Error(w, `{"success":false,"message":"Failed to generate token"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"success": true,
+		"message": "Login successful",
+		"token":   token,
+		"user":    user,
+	})
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
@@ -209,7 +274,13 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = db.Exec("INSERT INTO users (name, username, password) VALUES ($1, $2, $3)", u.Name, u.Username, u.Password)
+		hashedPassword, err := argon2id.CreateHash(u.Password, argon2id.DefaultParams)
+		if err != nil {
+			http.Error(w, `{"success":false,"message":"Failed to hash password"}`, http.StatusInternalServerError)
+			return
+		}
+
+		_, err = db.Exec("INSERT INTO users (name, username, password) VALUES ($1, $2, $3)", u.Name, u.Username, hashedPassword)
 		if err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
@@ -237,27 +308,39 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPut:
-		var u struct{ Name, Username, Password string }
-		if json.NewDecoder(r.Body).Decode(&u) != nil {
+		var u struct {
+			Name     string `json:"name"`
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
 			http.Error(w, `{"success":false}`, http.StatusBadRequest)
 			return
 		}
 
-		query := "UPDATE users SET name=$1, username=$2"
-		params := []interface{}{u.Name, u.Username}
+		var (
+			query  string
+			params []any
+		)
+
 		if u.Password != "" {
-			query += ", password=$4 WHERE user_id=$3"
-			params = append(params, id, u.Password)
+			hashedPassword, err := argon2id.CreateHash(u.Password, argon2id.DefaultParams)
+			if err != nil {
+				http.Error(w, `{"success":false,"message":"Failed to hash password"}`, http.StatusInternalServerError)
+				return
+			}
+			query = "UPDATE users SET name=$1, username=$2, password=$3 WHERE user_id=$4"
+			params = []any{u.Name, u.Username, hashedPassword, id}
 		} else {
-			query += " WHERE user_id=$3"
-			params = append(params, id)
+			query = "UPDATE users SET name=$1, username=$2 WHERE user_id=$3"
+			params = []any{u.Name, u.Username, id}
 		}
 
-		_, err = db.Exec(query, params...)
-		if err != nil {
+		if _, err := db.Exec(query, params...); err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
 		}
+
 		w.Write([]byte(`{"success":true}`))
 
 	case http.MethodDelete:

@@ -9,9 +9,9 @@
   </div>
   <div class="sm:mx-auto sm:w-full sm:max-w-sm">
     <h2
-      class="mt-10 text-center text-[30px] font-medium tracking-tight text-gray-900"
+      class="mt-10 text-center text-[25px] font-medium tracking-tight text-gray-900"
     >
-      Sign in to your account
+      Συνδεθείτε στον λογαριασμό σας
     </h2>
   </div>
 
@@ -23,7 +23,7 @@
 
       <div>
         <label for="username" class="block text-sm/6 font-medium text-gray-900"
-          >Username</label
+          >Όνομα χρήστη</label
         >
         <div class="mt-2">
           <input
@@ -43,15 +43,15 @@
           <label
             for="password"
             class="block text-sm/6 font-medium text-gray-900"
-            >Password</label
+            >Κωδικός πρόσβασης</label
           >
-          <div class="text-sm">
+          <!-- <div class="text-sm">
             <a
               href="#"
               class="font-semibold text-amber-950 hover:text-amber-900"
               >Forgot password?</a
             >
-          </div>
+          </div> -->
         </div>
         <div class="mt-2">
           <input
@@ -69,9 +69,15 @@
       <div>
         <button
           type="submit"
-          class="flex w-full justify-center rounded-md bg-black border-2 border-black px-3 py-1.5 text-sm/6 font-medium text-white shadow-xs hover:bg-white hover:text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 cursor-pointer transition-all duration-150"
-        >
-          Sign in
+          [disabled]="!loginForm.form.valid || isSubmitting"
+          [ngClass]="{
+            'bg-black border-black text-white hover:bg-white hover:text-black cursor-pointer': loginForm.form.valid && !isSubmitting,
+            'bg-gray-400 border-gray-400 text-gray-600 cursor-not-allowed': !loginForm.form.valid || isSubmitting,
+            'cursor-wait': isSubmitting
+          }"
+          class="flex w-full justify-center rounded-md border-2 px-3 py-1.5 text-sm/6 font-medium shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all duration-150"
+          >
+          Σύνδεση
         </button>
       </div>
     </form>

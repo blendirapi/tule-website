@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import CryptoJS from 'crypto-js';
 
 @Component({
   selector: 'app-login',
@@ -17,20 +18,32 @@ export class LoginComponent {
   };
 
   errorMessage = '';
+  isSubmitting: boolean = false;
 
   constructor(private http: HttpClient, private router: Router) { }
 
-  onSubmit() {
-    this.http.post<any>('http://localhost:8080/v0/api/login', this.formData)
-      .subscribe({
-        next: (response) => {
-          console.log('Login successful', response);
-          this.router.navigate(['/dashboard']);
-        },
-        error: (error) => {
-          console.error('Login failed', error);
-          this.errorMessage = error.error.message || 'Login failed. Please try again.';
-        }
-      });
-  }
+  async onSubmit() {
+	this.isSubmitting = true;
+	try {
+		const hash = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(this.formData.password)).toString();
+
+		const payload = {
+			username: this.formData.username,
+			password: hash
+		};
+
+		this.http.post<any>('/v0/api/login', payload).subscribe({
+			next: (response) => {
+				localStorage.setItem('token', response.token);
+				this.router.navigate(['/dashboard']);
+			},
+			error: (error) => {
+				this.isSubmitting = false;
+				this.errorMessage = error.error.message || 'Η σύνδεση απέτυχε. Παρακαλώ δοκιμάστε ξανά.';
+			}
+		});
+	} catch (e) {
+		this.errorMessage = 'Σφάλμα κρυπτογράφησης κωδικού.';
+	}
+}
 }

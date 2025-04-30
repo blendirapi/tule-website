@@ -7,7 +7,7 @@
       (click)="changeDate(-1)"
       class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow cursor-pointer item1"
     >
-      <span class="mr-1">&larr;</span>Previous Day
+      <span class="mr-1">&larr;</span>Προηγούμενη μέρα
     </button>
 
     <input
@@ -20,7 +20,7 @@
       (click)="changeDate(1)"
       class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow cursor-pointer item3"
     >
-      Next Day<span class="ml-1">&rarr;</span>
+      Επόμενη Μέρα<span class="ml-1">&rarr;</span>
     </button>
   </div>
 
@@ -84,11 +84,11 @@
       &times;
     </button>
 
-    <h2 class="text-xl font-bold mb-4">Edit Booking</h2>
+    <h2 class="text-xl font-bold mb-4">Επεξεργασία Κράτησης</h2>
 
-    <form class="space-y-4 text-sm">
+    <form #modal="ngForm" class="space-y-4 text-sm">
       <div>
-        <label class="block font-semibold">First Name</label>
+        <label class="block font-semibold">Όνομα</label>
         <input
           type="text"
           [(ngModel)]="selectedBooking.firstname"
@@ -97,7 +97,7 @@
         />
       </div>
       <div>
-        <label class="block font-semibold">Last Name</label>
+        <label class="block font-semibold">Επώνυμο</label>
         <input
           type="text"
           [(ngModel)]="selectedBooking.lastname"
@@ -115,7 +115,7 @@
         />
       </div>
       <div>
-        <label class="block font-semibold">Phone</label>
+        <label class="block font-semibold">Τηλέφωνο</label>
         <input
           type="tel"
           [(ngModel)]="selectedBooking.phone"
@@ -124,24 +124,26 @@
         />
       </div>
       <div>
-        <label class="block font-semibold">Date</label>
+        <label class="block font-semibold">Ημερομηνία</label>
         <input
           type="date"
           [(ngModel)]="selectedBooking.date"
           name="date"
           class="w-full border p-2 rounded"
+          required
         />
       </div>
 
       <div class="flex gap-4">
         <div class="flex-1">
-          <label class="block font-semibold">Start Time</label>
+          <label class="block font-semibold">Ώρα Έναρξης</label>
           <div class="flex items-center gap-2">
             <input
               type="time"
               [(ngModel)]="selectedBooking.start_time"
               name="start_time"
               class="w-full border p-2 rounded"
+              required
             />
             <div class="flex flex-col gap-1">
               <button
@@ -163,7 +165,7 @@
         </div>
 
         <div class="flex-1">
-          <label class="block font-semibold">End Time</label>
+          <label class="block font-semibold">Ώρα Λήξης</label>
           <div class="flex items-center gap-2">
             <input
               type="time"
@@ -171,6 +173,7 @@
               [(ngModel)]="selectedBooking.end_time"
               name="end_time"
               class="w-full border p-2 rounded"
+              required
             />
             <div class="flex flex-col gap-1">
               <button
@@ -193,11 +196,12 @@
       </div>
 
       <div>
-        <label class="block font-semibold">User</label>
+        <label class="block font-semibold">Κουρέας</label>
         <select
           [(ngModel)]="selectedBooking.user_id"
           name="user"
           class="w-full border p-2 rounded"
+          required
         >
           <option *ngFor="let artist of artists" [value]="artist.user_id">
             {{ artist.name }}
@@ -206,11 +210,12 @@
       </div>
 
       <div>
-        <label class="block font-semibold">Service</label>
+        <label class="block font-semibold">Υπηρεσία</label>
         <select
           [(ngModel)]="selectedBooking.service_id"
           name="service"
           class="w-full border p-2 rounded"
+          required
         >
           <option *ngFor="let service of services" [value]="service.service_id">
             {{ service.name }}
@@ -219,19 +224,26 @@
       </div>
 
       <div class="flex justify-between pt-4 space-x-4">
-        <button
-          type="button"
-          class="px-4 bg-red-500 cursor-pointer text-white py-2 rounded hover:bg-red-800"
+        <button type="button" [disabled]="isSubmitting" 
+          [ngClass]="{
+            'bg-red-500 hover:bg-red-800 cursor-pointer' : !isSubmitting,
+            'cursor-wait': isSubmitting,
+          }"
+          class="bg-red-300 px-4 text-white py-2 rounded"
           (click)="deleteBooking(selectedBooking.booking_id)"
         >
-          Delete
+          Διαγραφή
         </button>
-        <button
-          type="button"
-          class="px-4 bg-blue-500 cursor-pointer text-white py-2 rounded hover:bg-blue-600"
+        <button type="button" [disabled]="!modal.form.valid || isSubmitting"
+          [ngClass]="{
+            'bg-blue-600 hover:bg-blue-800 cursor-pointer' : modal.form.valid && !isSubmitting,
+            'cursor-not-allowed': !modal.form.valid || !isSubmitting,
+            'cursor-wait': isSubmitting,
+          }"
+          class="bg-blue-300 px-4 cursor-pointer text-white py-2 rounded"
           (click)="saveBookingChanges()"
         >
-          Save
+          Αποθήκευση
         </button>
       </div>
     </form>

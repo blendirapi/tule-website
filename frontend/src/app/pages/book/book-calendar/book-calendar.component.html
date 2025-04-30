@@ -1,23 +1,16 @@
-<button
-  class="flex items-center gap-1 text-sm bg-gray-200 hover:bg-gray-400 text-black font-medium py-2 px-4 rounded cursor-pointer mb-4 group"
-  (click)="goBack()"
->
-  <span
-    class="text-lg mb-1 group-hover:translate-x-[-5px] transition-all duration-200"
-    >←</span
-  >
-  Πίσω
-</button>
-
 <h2 class="text-xl font-semibold">Επιλέξτε Ημερομηνία</h2>
 
-<div class="calendar-container" *ngIf="dateAvailabilities.length">
-  <mat-calendar
-    [minDate]="minDate"
-    [maxDate]="maxDate"
-    [dateFilter]="dateFilter"
-    [dateClass]="getDateClass"
-    (selectedChange)="onDateSelected($event)"
-  >
-  </mat-calendar>
-</div>
+<img *ngIf="isLoading; else content" src="loading.gif" class="mx-auto h-20 mt-6 mb-4" />
+
+<ng-template #content>
+  <div class="calendar-container" *ngIf="dateAvailabilities.length">
+    <mat-calendar
+      [minDate]="minDate"
+      [maxDate]="maxDate"
+      [dateFilter]="dateFilter"
+      [dateClass]="getDateClass"
+      (selectedChange)="onDateSelected($event)"
+    >
+    </mat-calendar>
+  </div>
+</ng-template>
