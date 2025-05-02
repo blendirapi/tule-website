@@ -17,8 +17,8 @@ interface Artist {
 })
 export class BookArtistComponent {
   @Output() artistSelected = new EventEmitter<string>();
+  @Output() artistSelectedName = new EventEmitter<string>();
   artists: Artist[] = [];
-  selectedArtist: string | null = null;
   isLoading: boolean = true;
 
   constructor(private http: HttpClient) { }
@@ -27,9 +27,9 @@ export class BookArtistComponent {
     this.fetchArtists();
   }
 
-  selectArtist(artist: string) {
-    this.selectedArtist = artist;
-    this.artistSelected.emit(artist);
+  selectArtist(artistId: string, artistName: string) {
+    this.artistSelected.emit(artistId);
+    this.artistSelectedName.emit(artistName);
   }
 
   fetchArtists(): void {

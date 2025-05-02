@@ -27,7 +27,9 @@ import { CommonModule } from '@angular/common';
 })
 export class BookingComponent {
   selectedArtist: string | null = null;
+  selectedArtistName: string | null = null;
   selectedService: string | null = null;
+  selectedServiceName: string | null = null;
   selectedDate: Date | null = null;
   selectedTime: string | null = null;
   bookingComplete = false;
@@ -36,8 +38,16 @@ export class BookingComponent {
     this.selectedArtist = artist;
   }
 
+  onArtistSelectedName(name: string): void {
+    this.selectedArtistName = name;
+  }
+
   onServiceSelected(service: string): void {
     this.selectedService = service;
+  }
+
+  onServiceSelectedName(name: string): void {
+    this.selectedServiceName = name;
   }
 
   onDateSelected(date: Date): void {

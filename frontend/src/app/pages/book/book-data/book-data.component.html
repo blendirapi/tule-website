@@ -1,8 +1,8 @@
 <form (ngSubmit)="onSubmit()" #bookingForm="ngForm">
   <div class="text-left mb-4">
-    <p><strong>Κουρέας:</strong> {{ artistName }}</p>
-    <p><strong>Υπηρεσία:</strong> {{ serviceName }}</p>
-    <p><strong>Ημερομηνία:</strong> {{ selectedDate | date : "fullDate" }}</p>
+    <p><strong>Κουρέας:</strong> {{ selectedArtistName }}</p>
+    <p><strong>Υπηρεσία:</strong> {{ selectedServiceName }}</p>
+    <p><strong>Ημερομηνία:</strong> {{ selectedDate | date : "fullDate" : undefined : 'el' }}</p>
     <p><strong>Ώρα:</strong> {{ selectedTime }}</p>
   </div>
 
@@ -58,6 +58,7 @@
         id="email"
         name="email"
         [(ngModel)]="email"
+        pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         required
         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500"
       />

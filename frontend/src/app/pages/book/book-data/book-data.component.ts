@@ -1,9 +1,13 @@
-import { Component, Output, EventEmitter, Input, OnInit } from '@angular/core';
+import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { registerLocaleData } from '@angular/common';
+import localeEl from '@angular/common/locales/el';
+
+registerLocaleData(localeEl);
 
 interface BookingFormData {
   artist: string | null;
@@ -33,9 +37,11 @@ interface BookingResponse extends NamesResponse {
   imports: [CommonModule, FormsModule],
   templateUrl: './book-data.component.html',
 })
-export class BookDataComponent implements OnInit {
+export class BookDataComponent {
   @Input() selectedArtist: string | null = null;
+  @Input() selectedArtistName: string | null = null;
   @Input() selectedService: string | null = null;
+  @Input() selectedServiceName: string | null = null;
   @Input() selectedDate: Date | null = null;
   @Input() selectedTime: string | null = null;
 
@@ -46,14 +52,9 @@ export class BookDataComponent implements OnInit {
   phone: string = '';
   email: string = '';
   serviceName: string = '';
-  artistName: string = '';
   isSubmitting : boolean = false;
 
   constructor(private http: HttpClient) { }
-
-  ngOnInit(): void {
-    this.fetchNames();
-  }
 
   private formatLocalDate(date: Date | null): string {
     if (!date) return '';
@@ -63,33 +64,6 @@ export class BookDataComponent implements OnInit {
     const day = String(date.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
-  }
-
-  fetchNames(): void {
-    if (!this.selectedArtist || !this.selectedService) {
-      return;
-    }
-
-    const params = {
-      artist_id: this.selectedArtist,
-      service_id: this.selectedService
-    };
-
-    this.http.get<NamesResponse>('/v0/api/service_artist_names', { params })
-      .pipe(
-        catchError((error: HttpErrorResponse) => {
-          console.error('API error:', error);
-          return of(null);
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          if (response) {
-            this.serviceName = response.service_name || '';
-            this.artistName = response.user_name || '';
-          }
-        }
-      });
   }
 
   onSubmit(): void {

@@ -13,6 +13,7 @@ interface Artist {
 interface Service {
 	service_id: number;
 	name: string;
+	time: string;
 }
 
 interface Booking {
@@ -39,10 +40,12 @@ interface Booking {
 })
 export class DailyCalendarComponent implements OnInit {
 	selectedBooking: Booking | null = null;
+	newBooking: Partial<Booking> = {};
+	newBookingModal: boolean = false;
 	bookings: Booking[] = [];
 	artists: Artist[] = [];
 	services: Service[] = [];
-	hours = Array.from({ length: 14 }, (_, i) => i + 8);
+	hours = Array.from({ length: 13 }, (_, i) => i + 9); // Here is the start time and also how many hours to show
 	selectedDate = format(new Date(), 'yyyy-MM-dd');
 	isSubmitting: Boolean = false;
 
@@ -100,7 +103,7 @@ export class DailyCalendarComponent implements OnInit {
 
 	getMinutesFromStart(time: string): number {
 		const [hour, minute] = time.split(':').map(Number);
-		return (hour - 8) * 60 + minute;
+		return (hour - 9) * 60 + minute;
 	}
 
 	getDuration(start: string, end: string): number {
@@ -127,6 +130,14 @@ export class DailyCalendarComponent implements OnInit {
 		this.selectedBooking = null;
 	}
 
+	openNewBookingModal() {
+		this.newBookingModal = true;
+	}
+	
+	closeNewBookingModal() {
+		this.newBookingModal = false;
+	}
+
 	saveBookingChanges() {
 		if (this.selectedBooking) {
 			const updatedBooking = {
@@ -150,6 +161,35 @@ export class DailyCalendarComponent implements OnInit {
 				},
 				error: (error) => {
 					console.error('Failed to update booking:', error);
+				}
+			});
+			
+		}
+	}	
+
+	saveNewBooking() {
+		if (this.newBooking) {
+			const newBooking = {
+				artist: this.newBooking.user_id?.toString(),
+				service: this.newBooking.service_id?.toString(),
+				date: this.newBooking.date,
+				time: this.newBooking.start_time + ' - ' + this.newBooking.end_time ,
+				firstName: this.newBooking.firstname,
+				lastName: this.newBooking.lastname,
+				phone: this.newBooking.phone,
+				email: this.newBooking.email
+			};
+	
+			this.http.post('/v0/api/add_dash_booking', newBooking, {
+				headers: { 'Content-Type': 'application/json' }
+			})
+			.subscribe({
+				next: () => {
+					this.closeNewBookingModal();
+					this.loadBookings();
+				},
+				error: (error) => {
+					console.error('Failed to add booking:', error);
 				}
 			});
 			

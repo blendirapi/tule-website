@@ -14,12 +14,13 @@
     <app-book-artist
       *ngIf="!selectedArtist"
       (artistSelected)="onArtistSelected($event)"
-    >
+      (artistSelectedName)="onArtistSelectedName($event)">
     </app-book-artist>
 
     <app-book-type
       *ngIf="selectedArtist && !selectedService"
       (optionSelected)="onServiceSelected($event)"
+      (optionSelectedName)="onServiceSelectedName($event)"
     >
     </app-book-type>
 
@@ -39,21 +40,16 @@
     </app-book-time>
 
     <app-book-data
-      *ngIf="
-        selectedArtist &&
-        selectedService &&
-        selectedDate &&
-        selectedTime &&
-        !bookingComplete
-      "
+      *ngIf="selectedArtist && selectedService && selectedDate && selectedTime && !bookingComplete"
       [selectedArtist]="selectedArtist"
+      [selectedArtistName]="selectedArtistName"
       [selectedService]="selectedService"
+      [selectedServiceName]="selectedServiceName"
       [selectedDate]="selectedDate"
       [selectedTime]="selectedTime"
-      (formSubmitted)="onFormSubmitted($event)"
-    >
+      (formSubmitted)="onFormSubmitted($event)">
     </app-book-data>
-
+  
     <app-book-final *ngIf="bookingComplete"> </app-book-final>
   </div>
 

@@ -1,4 +1,3 @@
-Dash add bookings
-Services new fields && add tattoo && add blank Services
 Cookie Banner
 Legal texts etc
+Update packages

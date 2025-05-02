@@ -2,7 +2,7 @@
 
 <div class="p-4 space-y-4">
   <!-- Date Navigation -->
-  <div class="grid grid-layout-calendar items-center gap-4 justify-center py-6">
+  <div class="grid grid-layout-calendar items-center gap-4 justify-center mt-4 mb-6">
     <button
       (click)="changeDate(-1)"
       class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow cursor-pointer item1"
@@ -24,6 +24,15 @@
     </button>
   </div>
 
+  <div class="flex justify-center mb-6">
+    <button
+      class="flex text-center rounded-md border-2 px-3 py-1.5 text-sm/6 font-medium shadow-xs transition-all duration-150 bg-black border-black text-white hover:bg-white hover:text-black cursor-pointer"
+    	(click)="openNewBookingModal()"
+      >
+      <span>+ Νέα κράτηση</span>
+    </button>
+  </div>
+
   <div class="flex flex-col gap-6 lg:flex-row lg:flex-wrap lg:justify-center">
     <!-- Loop through unique user names -->
     <div
@@ -35,13 +44,14 @@
       </h2>
 
       <div
-        class="relative h-[840px] border-t border-gray-300 bg-white rounded-b-2xl"
+        class="relative h-[780px] border-t border-gray-300 bg-white rounded-b-2xl"
       >
         <!-- Hour lines -->
+        <!-- If times change this should also be updated along with the pixels above -->
         <div
           *ngFor="let hour of hours"
           class="absolute left-0 right-0 border-t border-dashed border-gray-200 text-xs text-gray-400"
-          [style.top.px]="(hour - 8) * 60"
+          [style.top.px]="(hour - 9) * 60"
         >
           <span class="ml-2 mt-2">{{ hour }}:00</span>
         </div>
@@ -218,7 +228,7 @@
           required
         >
           <option *ngFor="let service of services" [value]="service.service_id">
-            {{ service.name }}
+            {{ service.name }} ({{ service.time }})
           </option>
         </select>
       </div>
@@ -248,4 +258,104 @@
       </div>
     </form>
   </div>
+</div>
+
+<div
+	*ngIf="newBookingModal"
+	class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+  (click)="closeNewBookingModal()"
+>
+	<div
+		class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full relative"
+		(click)="$event.stopPropagation()"
+	>
+		<!-- Close Button -->
+		<button
+			class="text-2xl absolute top-5 right-5 text-gray-500 hover:text-gray-800"
+			(click)="closeNewBookingModal()"
+		>
+			&times;
+		</button>
+
+		<h2 class="text-xl font-bold mb-4">Νέα Κράτηση</h2>
+
+    <form #newBookingForm="ngForm" class="space-y-4 text-sm">
+      <div>
+        <label class="block font-semibold">Όνομα</label>
+        <input type="text" name="firstname" [(ngModel)]="newBooking.firstname" class="w-full border p-2 rounded" />
+      </div>
+      <div>
+        <label class="block font-semibold">Επώνυμο</label>
+        <input type="text" name="lastname" [(ngModel)]="newBooking.lastname" class="w-full border p-2 rounded" />
+      </div>
+      <div>
+        <label class="block font-semibold">Email</label>
+        <input type="email" name="email" [(ngModel)]="newBooking.email" class="w-full border p-2 rounded" />
+      </div>
+      <div>
+        <label class="block font-semibold">Τηλέφωνο</label>
+        <input type="tel" name="phone" [(ngModel)]="newBooking.phone" class="w-full border p-2 rounded" />
+      </div>
+      <div>
+        <label class="block font-semibold">Ημερομηνία</label>
+        <input type="date" name="date" [(ngModel)]="newBooking.date" class="w-full border p-2 rounded" required />
+      </div>
+    
+      <div class="flex gap-4">
+        <div class="flex-1">
+          <label class="block font-semibold">Ώρα Έναρξης</label>
+          <div class="flex items-center gap-2">
+            <input type="time" name="start_time" [(ngModel)]="newBooking.start_time" class="w-full border p-2 rounded" required />
+            <div class="flex flex-col gap-1">
+              <button type="button" (click)="adjustTime('start_time', 30)" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">+</button>
+              <button type="button" (click)="adjustTime('start_time', -30)" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">−</button>
+            </div>
+          </div>
+        </div>
+    
+        <div class="flex-1">
+          <label class="block font-semibold">Ώρα Λήξης</label>
+          <div class="flex items-center gap-2">
+            <input type="time" name="end_time" [(ngModel)]="newBooking.end_time" class="w-full border p-2 rounded" required />
+            <div class="flex flex-col gap-1">
+              <button type="button" (click)="adjustTime('end_time', 30)" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">+</button>
+              <button type="button" (click)="adjustTime('end_time', -30)" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">−</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <div>
+        <label class="block font-semibold">Κουρέας</label>
+        <select name="user" [(ngModel)]="newBooking.user_id" class="w-full border p-2 rounded" required>
+          <option *ngFor="let artist of artists" [value]="artist.user_id">{{ artist.name }}</option>
+        </select>
+      </div>
+    
+      <div>
+        <label class="block font-semibold">Υπηρεσία</label>
+        <select name="service" [(ngModel)]="newBooking.service_id" class="w-full border p-2 rounded" required>
+          <option *ngFor="let service of services" [value]="service.service_id">
+            {{ service.name }} ({{ service.time }})
+          </option>
+        </select>
+      </div>
+    
+      <!-- Action Buttons -->
+      <div class="flex justify-end pt-4 space-x-4">
+        <button type="button" [disabled]="!newBookingForm.form.valid || isSubmitting"
+          [ngClass]="{
+            'bg-blue-600 hover:bg-blue-800 cursor-pointer': newBookingForm.form.valid && !isSubmitting,
+            'cursor-not-allowed': !newBookingForm.form.valid || isSubmitting,
+            'cursor-wait': isSubmitting
+          }"
+          class="w-full bg-blue-300 px-4 text-white py-2 rounded"
+          (click)="saveNewBooking()"
+        >
+          Δημιουργία
+        </button>
+      </div>
+    </form>
+    
+	</div>
 </div>

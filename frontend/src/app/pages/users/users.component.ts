@@ -13,7 +13,7 @@ import { DashboardNavComponent } from '../../components/dashboard-nav/dashboard-
 })
 export class UsersComponent implements OnInit {
 	users: any[] = [];
-	form = { user_id: null, name: '', username: '', password: '' };
+	form = { user_id: null, name: '', username: '', password: '', isVisible: false };
 	isEditing: Boolean = false;
 	isSubmitting: Boolean = false;
 
@@ -27,6 +27,7 @@ export class UsersComponent implements OnInit {
 		this.http.get<any[]>('/v0/api/users').subscribe((data) => {
 			this.users = data;
 			this.isSubmitting = false;
+			this.cancelEdit();
 		});
 	}
 
@@ -36,8 +37,11 @@ export class UsersComponent implements OnInit {
 			const hash = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(this.form.password)).toString();
 
 			const userPayload = {
-				...this.form,
-				password: hash
+				user_id: this.form.user_id,
+				name: this.form.name,
+				username: this.form.username,
+				password: hash,
+				isVisible: this.form.isVisible
 			};
 
 			const apiUrl = this.isEditing ? `/v0/api/user/${this.form.user_id}` : `/v0/api/users`;
@@ -64,7 +68,7 @@ export class UsersComponent implements OnInit {
 	}
 
 	cancelEdit() {
-		this.form = { user_id: null, name: '', username: '', password: '' };
 		this.isEditing = false;
+		this.form = { user_id: null, name: '', username: '', password: '', isVisible: false };
 	}
 }

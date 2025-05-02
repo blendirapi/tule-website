@@ -8,8 +8,10 @@ import { Component, Output, EventEmitter } from '@angular/core';
 })
 export class BookTypeComponent {
   @Output() optionSelected = new EventEmitter<string>();
+  @Output() optionSelectedName = new EventEmitter<string>();
 
-  selectOption(option: string) {
+  selectOption(option: string, optionName: string) {
     this.optionSelected.emit(option);
+    this.optionSelectedName.emit(optionName);
   }
 }
