@@ -113,7 +113,7 @@ func main() {
 	http.Handle("/v0/api/available_times", cors(http.HandlerFunc(availableTimesHandler)))
 	http.Handle("/v0/api/availability", cors(http.HandlerFunc(availableTimesMonthlyHandler)))
 
-	http.Handle("/v0/api/add_dash_booking", cors((http.HandlerFunc(createDashBookingHandler))))
+	http.Handle("/v0/api/add_dash_booking", cors(auth(http.HandlerFunc(createDashBookingHandler))))
 	http.Handle("/v0/api/get_bookings", cors(auth(http.HandlerFunc(getBookingsHandler))))
 	http.Handle("/v0/api/bookings/", cors(auth(http.HandlerFunc(bookingHandler))))
 	http.Handle("/v0/api/users", cors(auth(http.HandlerFunc(usersHandler))))

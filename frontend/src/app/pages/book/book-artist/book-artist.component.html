@@ -8,7 +8,7 @@
       <input type="radio" name="{{ artist.name }}" class="hidden peer" (click)="selectArtist(artist.user_id, artist.name)" />
       <div
         class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-32 sm:w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden">
-        <img src="head.svg" alt="{{ artist.name }}" class="h-28 w-16 object-cover mb-1" />
+        <img src="head.svg" alt="Εικόνα απο {{ artist.name }}" class="h-28 w-16 object-cover mb-1" />
         <span class="text-sm">{{ artist.name }}</span>
       </div>
     </label>

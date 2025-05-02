@@ -52,7 +52,8 @@ export class BookDataComponent {
   phone: string = '';
   email: string = '';
   serviceName: string = '';
-  isSubmitting : boolean = false;
+  isSubmitting: boolean = false;
+  honeypot: string = '';
 
   constructor(private http: HttpClient) { }
 
@@ -67,6 +68,10 @@ export class BookDataComponent {
   }
 
   onSubmit(): void {
+    if (this.honeypot) {
+      return;
+    }
+
     this.isSubmitting = true;
     const formData: BookingFormData = {
       artist: this.selectedArtist,

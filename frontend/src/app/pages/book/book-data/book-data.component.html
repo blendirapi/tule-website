@@ -65,6 +65,11 @@
     </div>
   </div>
 
+  <div style="display:none;">
+    <label for="honeypot">Leave this field empty</label>
+    <input type="text" id="honeypot" name="honeypot" [(ngModel)]="honeypot">
+  </div>
+  
   <button
     type="submit"
     [disabled]="!bookingForm.form.valid || isSubmitting"
