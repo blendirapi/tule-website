@@ -8,7 +8,13 @@ import { MatCardModule } from '@angular/material/card';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatDatepickerModule, MatNativeDateModule, MatCardModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatCardModule,
+  ],
   templateUrl: './app.component.html',
 })
 export class AppComponent {

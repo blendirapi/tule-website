@@ -15,7 +15,7 @@
     aria-label="Introductory content"
   >
     <div class="flex flex-col md:flex-row gap-4 mb-8">
-      <figure
+      <!-- <figure
         class="md:w-1/2 h-[inherit] min-h-64 md:min-h-80 overflow-hidden relative"
       >
         <img
@@ -24,7 +24,46 @@
           class="absolute top-0 left-0 w-full h-full transition-transform duration-100 ease-linear object-cover"
           [ngStyle]="{ transform: 'translateY(' + translateY + 'px)' }"
         />
-      </figure>
+      </figure> -->
+      <!-- <section class="relative w-[50%] m-auto">
+        <swiper-container
+          #swiperRef
+          swiperElement
+          [config]="config"
+          init="false"
+          slides-per-view="3"
+          speed="500"
+          loop="true"
+          css-mode="true"
+        >
+          <swiper-slide *ngFor="let slide of slides" class="slide">
+            <img
+              width="300"
+              height="200"
+              src="banner.webp"
+              alt="Intro image 1"
+            />
+          </swiper-slide>
+        </swiper-container>
+        <div class="swiper-scrollbar"></div>
+      </section> -->
+
+      <div class="swiper firstSwiper md:w-1/2 h-[inherit] min-h-64 md:min-h-80">
+        <div class="swiper-wrapper h-full">
+          <div class="swiper-slide" *ngFor="let slide of slidesFirstSwiper">
+            <img
+              [src]="slide.image"
+              [alt]="slide.title"
+              class="absolute h-full w-full block object-cover"
+            />
+          </div>
+        </div>
+
+        <!-- Optional navigation -->
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-scrollbar"></div>
+      </div>
       <article class="bg-black text-white md:w-1/2 px-4 py-6 rounded-lg">
         <h2
           class="text-lg font-semibold mb-4 border-b border-white tracking-wide"
@@ -63,7 +102,7 @@
           Duis in fermentum lorem.
         </p>
       </article>
-      <figure
+      <!-- <figure
         class="md:w-1/2 h-[inherit] min-h-64 md:min-h-80 overflow-hidden relative"
       >
         <img
@@ -72,7 +111,25 @@
           class="absolute top-0 left-0 w-full h-full transition-transform duration-100 ease-linear object-cover"
           [ngStyle]="{ transform: 'translateY(' + translateY + 'px)' }"
         />
-      </figure>
+      </figure> -->
+
+      <div
+        class="swiper secondSwiper md:w-1/2 h-[inherit] min-h-64 md:min-h-80"
+      >
+        <div class="swiper-wrapper md:h-full">
+          <div class="swiper-slide" *ngFor="let slide of slidesSecondSwiper">
+            <img
+              [src]="slide.image"
+              [alt]="slide.title"
+              class="absolute h-full w-full block object-cover"
+            />
+          </div>
+        </div>
+
+        <div class="swiper-button-next second"></div>
+        <div class="swiper-button-prev second"></div>
+        <div class="swiper-scrollbar second"></div>
+      </div>
     </div>
   </section>
 

@@ -61,3 +61,54 @@ body {
 .item3 {
   grid-area: item3;
 }
+
+.swiper {
+  @media screen and (max-width: 950px) {
+    margin-left: unset;
+    margin-right: unset;
+  }
+}
+
+.swiper-wrapper {
+  width: inherit;
+  display: flex;
+  transition-property: transform;
+  box-sizing: content-box;
+
+  @media screen and (max-width: 767px) {
+    height: 300px;
+  }
+}
+.swiper-slide {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
+
+  cursor: grab;
+}
+
+.swiper-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: white;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+  font-size: 30px;
+}
+
+.swiper-scrollbar {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.swiper-scrollbar-drag {
+  background: rgba(255, 255, 255, 0.7);
+}
