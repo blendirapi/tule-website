@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/alexedwards/argon2id"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -197,9 +197,9 @@ func getEnv(key string) string {
 var jwtKey = []byte(getEnv("JWT_SECRET"))
 
 func generateJWT(userID int) (string, error) {
-	claims := &jwt.StandardClaims{
+	claims := &jwt.RegisteredClaims{
 		Subject:   fmt.Sprint(userID),
-		ExpiresAt: time.Now().Add(2 * 30 * 24 * time.Hour).Unix(),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(2 * 30 * 24 * time.Hour)),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -217,7 +217,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// Example: "Authorization <token>" — strip "Authorization " if you're using it
 		tokenString := strings.TrimSpace(authHeader)
 
-		claims := &jwt.StandardClaims{}
+		claims := &jwt.RegisteredClaims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
