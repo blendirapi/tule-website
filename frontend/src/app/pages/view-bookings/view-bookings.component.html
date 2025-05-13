@@ -1,74 +1,162 @@
 <app-dashboard-nav></app-dashboard-nav>
+<div class="flex justify-center gap-4 mt-4">
+  <button (click)="switchView('daily')"
+    [ngClass]="viewMode === 'daily' ? 'bg-black text-white' : 'bg-white text-black border'"
+    class="px-4 py-2 rounded border font-semibold shadow">
+    Ημερήσια προβολή
+  </button>
 
-<div class="p-4 space-y-4">
-  <!-- Date Navigation -->
-  <div class="grid grid-layout-calendar items-center gap-4 justify-center mt-4 mb-6">
-    <button
-      (click)="changeDate(-1)"
-      class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow cursor-pointer item1"
-    >
-      <span class="mr-1">&larr;</span>Προηγούμενη μέρα
+  <button (click)="switchView('weekly')"
+    [ngClass]="viewMode === 'weekly' ? 'bg-black text-white' : 'bg-white text-black border'"
+    class="px-4 py-2 rounded border font-semibold shadow">
+    Εβδομαδιαία προβολή
+  </button>
+</div>
+
+<div *ngIf="viewMode === 'daily'">
+  <div class="p-4 space-y-4">
+    <div class="flex flex-col items-center gap-2 mb-2">
+      <p class="text-lg font-semibold">{{ getFormattedSelectedDate() }}</p>
+      <button (click)="goToToday()"
+        class="flex text-center rounded-md border-2 px-3 py-1.5 text-sm/6 font-medium shadow-xs transition-all duration-150 bg-black border-black text-white hover:bg-white hover:text-black cursor-pointer">
+        ⟳ Σήμερα
+      </button>
+    </div>
+
+    <!-- Date Navigation -->
+    <div class="grid grid-layout-calendar items-center gap-4 justify-center mt-4 mb-6">
+      <button (click)="changeDate(-1)"
+        class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow cursor-pointer item1">
+        <span class="mr-1">&larr;</span>Προηγούμενη μέρα
+      </button>
+
+      <input type="date" [(ngModel)]="selectedDate"
+        class="border p-2 rounded shadow text-center flex-1 max-w-[200px] min-w-[80px] item2" />
+
+      <button (click)="changeDate(1)"
+        class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow cursor-pointer item3">
+        Επόμενη Μέρα<span class="ml-1">&rarr;</span>
+      </button>
+    </div>
+
+    <div class="flex justify-center mb-6">
+      <button
+        class="flex text-center rounded-md border-2 px-3 py-1.5 text-sm/6 font-medium shadow-xs transition-all duration-150 bg-black border-black text-white hover:bg-white hover:text-black cursor-pointer"
+        (click)="openNewBookingModal()">
+        <span>+ Νέα κράτηση</span>
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-6 lg:flex-row lg:flex-wrap lg:justify-center">
+      <!-- Loop through unique user names -->
+      <div *ngFor="let user of getUniqueUsers()"
+        class="w-full lg:w-[calc(50%-0.75rem)] xl:w-[calc(33.333%-0.75rem)] shadow-2xl rounded-2xl">
+        <h2 class="bg-gray-100 flex items-center justify-between p-2 font-semibold rounded-t-2xl">
+          <span class="flex-1 text-center">{{ user.name }}</span>
+
+          <label class="inline-flex items-center cursor-pointer">
+            <input type="checkbox" value="" [checked]="hasFullDayBooking(selectedDate, user.id)"
+              (change)="disableDay($event, selectedDate, user.id)" class="sr-only peer" />
+
+            <div
+              class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 dark:peer-focus:ring-black rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-black">
+            </div>
+          </label>
+        </h2>
+
+        <div class="relative h-[720px] border-t border-gray-300 bg-white rounded-b-2xl">
+          <!-- Hour lines -->
+          <!-- If times change this should also be updated along with the pixels above -->
+          <div *ngFor="let hour of hours"
+            class="absolute left-0 right-0 border-t border-dashed border-gray-200 text-xs text-gray-400"
+            [style.top.px]="(hour - 9) * 60">
+            <span class="ml-2 mt-2">{{ hour }}:00</span>
+          </div>
+
+          <!-- Bookings -->
+          <div *ngFor="let booking of getUserBookingsForDate(user.id)"
+            class="ml-10 absolute left-2 right-2 bg-blue-500 border-gray-300 border-[1px] text-white p-1 text-xs overflow-hidden shadow rounded-md cursor-pointer"
+            [ngStyle]="{ 'background-color': booking.service_color }"
+            [style.top.px]="getMinutesFromStart(booking.start_time)"
+            [style.height.px]="getDuration(booking.start_time, booking.end_time)" (click)="openBookingModal(booking)">
+            <div class="font-bold truncate">
+              {{ booking.firstname }} {{ booking.lastname }}<span *ngIf="booking.firstname || booking.lastname"> /
+              </span>
+              {{ booking.service_name }} ({{ booking.start_time }} - {{ booking.end_time }})
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="viewMode === 'weekly'" class="flex flex-col items-center gap-6 px-4">
+  <div class="flex flex-col items-center gap-2 mt-5">
+    <p class="text-lg font-semibold">{{ getFormattedSelectedDate() }}</p>
+  </div>
+
+  <div class="flex gap-4 mb-1">
+    <button (click)="changeWeek(-1)"
+      class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow cursor-pointer item1">
+      ← Προηγούμενη εβδομάδα
     </button>
-
-    <input
-      type="date"
-      [(ngModel)]="selectedDate"
-      class="border p-2 rounded shadow text-center flex-1 max-w-[200px] min-w-[80px] item2"
-    />
-
-    <button
-      (click)="changeDate(1)"
-      class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow cursor-pointer item3"
-    >
-      Επόμενη Μέρα<span class="ml-1">&rarr;</span>
+    <button (click)="goToCurrentWeek()"
+      class="rounded-md border-2 px-3 py-1.5 text-sm/6 font-medium shadow-xs transition-all duration-150 bg-black border-black text-white hover:bg-white hover:text-black cursor-pointer item2">
+      ⟳ Τωρινή εβδομάδα
+    </button>
+    <button (click)="changeWeek(1)"
+      class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-medium shadow cursor-pointer item1">
+      Επόμενη εβδομάδα →
     </button>
   </div>
 
-  <div class="flex justify-center mb-6">
+  <div class="flex justify-center">
     <button
       class="flex text-center rounded-md border-2 px-3 py-1.5 text-sm/6 font-medium shadow-xs transition-all duration-150 bg-black border-black text-white hover:bg-white hover:text-black cursor-pointer"
-    	(click)="openNewBookingModal()"
-      >
+      (click)="openNewBookingModal()">
       <span>+ Νέα κράτηση</span>
     </button>
   </div>
 
-  <div class="flex flex-col gap-6 lg:flex-row lg:flex-wrap lg:justify-center">
-    <!-- Loop through unique user names -->
-    <div
-      *ngFor="let user of getUniqueUsers()"
-      class="w-full lg:w-[calc(50%-0.75rem)] xl:w-[calc(33.333%-0.75rem)] shadow-2xl rounded-2xl"
-    >
-      <h2 class="bg-gray-100 text-center p-2 font-semibold rounded-t-2xl">
+  <div class="w-full max-w-[1400px] flex flex-col items-center gap-6 px-4">
+    <!-- Each user calendar -->
+    <div *ngFor="let user of getUniqueUsers()"
+      class="w-full max-w-[1400px] shadow-2xl rounded-2xl border border-gray-200">
+      <h2 class="bg-gray-100 text-center p-3 text-lg font-semibold rounded-t-2xl">
         {{ user.name }}
       </h2>
 
-      <div
-        class="relative h-[780px] border-t border-gray-300 bg-white rounded-b-2xl"
-      >
-        <!-- Hour lines -->
-        <!-- If times change this should also be updated along with the pixels above -->
-        <div
-          *ngFor="let hour of hours"
-          class="absolute left-0 right-0 border-t border-dashed border-gray-200 text-xs text-gray-400"
-          [style.top.px]="(hour - 9) * 60"
-        >
-          <span class="ml-2 mt-2">{{ hour }}:00</span>
+      <div class="relative bg-white rounded-b-2xl border-t border-gray-300">
+        <!-- Time labels -->
+        <div class="absolute left-0 top-0 bottom-0 w-16 bg-white z-10 border-r border-gray-200">
+          <div *ngFor="let hour of hours" class="absolute text-xs text-gray-400" [style.top.px]="(hour - 9) * 60">
+            <span class="ml-2">{{ hour }}:00</span>
+          </div>
         </div>
 
-        <!-- Bookings -->
-        <div
-          *ngFor="let booking of getUserBookingsForDate(user.id)"
-          class="ml-10 absolute left-2 right-2 bg-blue-500 border-gray-300 border-[1px] text-white p-1 text-xs overflow-hidden shadow rounded-md cursor-pointer"
-          [ngStyle]="{ 'background-color': booking.service_color }"
-          [style.top.px]="getMinutesFromStart(booking.start_time)"
-          [style.height.px]="getDuration(booking.start_time, booking.end_time)"
-          (click)="openBookingModal(booking)"
-        >
-          <div class="font-bold truncate">
-            {{ booking.firstname }} {{ booking.lastname }} /
-            {{ booking.service_name }} ({{ booking.start_time }} -
-            {{ booking.end_time }})
+        <!-- Weekly grid: 6 days -->
+        <div class="ml-16 grid" [ngStyle]="{ 'grid-template-columns': 'repeat(6, 1fr)' }">
+          <!-- Day column -->
+          <div *ngFor="let day of getWeekDays()" class="relative border-l border-gray-200 h-[720px] overflow-hidden">
+            <!-- Greek day label -->
+            <div
+              class="absolute top-0 left-0 w-full bg-gray-100 text-center text-xs font-semibold py-1 z-10 opacity-80">
+              {{ getGreekDayName(day) }} {{ day | date: 'dd/MM' }}
+            </div>
+
+            <!-- Bookings for this user and this day -->
+            <div *ngFor="let booking of getUserBookingsForDateWeekly(user.id, day)"
+              class="absolute left-1 right-1 bg-blue-500 border border-gray-300 text-white p-1 text-xs overflow-hidden shadow rounded-md cursor-pointer w-auto max-w-full"
+              [ngStyle]="{ 'background-color': booking.service_color }"
+              [style.top.px]="getMinutesFromStart(booking.start_time)"
+              [style.height.px]="getDuration(booking.start_time, booking.end_time)" (click)="openBookingModal(booking)">
+              <div class="font-bold truncate">
+                {{ booking.firstname }} {{ booking.lastname }} /
+                {{ booking.service_name }} ({{ booking.start_time }} -
+                {{ booking.end_time }})
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -77,20 +165,11 @@
 </div>
 
 <!-- Modal -->
-<div
-  *ngIf="selectedBooking"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-  (click)="closeModal()"
->
-  <div
-    class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full relative"
-    (click)="$event.stopPropagation()"
-  >
+<div *ngIf="selectedBooking" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+  (click)="closeModal()">
+  <div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full relative" (click)="$event.stopPropagation()">
     <!-- Close Button -->
-    <button
-      class="text-2xl absolute top-5 right-5 text-gray-500 hover:text-gray-800"
-      (click)="closeModal()"
-    >
+    <button class="text-2xl absolute top-5 right-5 text-gray-500 hover:text-gray-800" (click)="closeModal()">
       &times;
     </button>
 
@@ -99,75 +178,47 @@
     <form #modal="ngForm" class="space-y-4 text-sm">
       <div>
         <label class="block font-semibold">Όνομα</label>
-        <input
-          type="text"
-          [(ngModel)]="selectedBooking.firstname"
-          name="firstname"
-          class="w-full border p-2 rounded"
-        />
+        <input type="text" [(ngModel)]="selectedBooking.firstname" name="firstname" class="w-full border p-2 rounded" />
       </div>
       <div>
         <label class="block font-semibold">Επώνυμο</label>
-        <input
-          type="text"
-          [(ngModel)]="selectedBooking.lastname"
-          name="lastname"
-          class="w-full border p-2 rounded"
-        />
+        <input type="text" [(ngModel)]="selectedBooking.lastname" name="lastname" class="w-full border p-2 rounded" />
       </div>
       <div>
         <label class="block font-semibold">Email</label>
-        <input
-          type="email"
-          [(ngModel)]="selectedBooking.email"
-          name="email"
-          class="w-full border p-2 rounded"
-        />
+        <input type="email" [(ngModel)]="selectedBooking.email" name="email" class="w-full border p-2 rounded" />
       </div>
-      <div>
+      <div class="relative" #phoneInputWrapper>
         <label class="block font-semibold">Τηλέφωνο</label>
-        <input
-          type="tel"
-          [(ngModel)]="selectedBooking.phone"
-          name="phone"
-          class="w-full border p-2 rounded"
-        />
+        <input type="tel" name="phone" [(ngModel)]="selectedBooking.phone" class="w-full border p-2 rounded"
+          (input)="onPhoneInput(selectedBooking.phone || '', 'selected')" (focus)="activateSuggestions('selected')" />
+
+        <ul *ngIf="suggestedClients.length > 0 && showSuggestions"
+          class="absolute z-10 bg-white border border-gray-300 w-full rounded mt-1 shadow max-h-40 overflow-y-auto">
+          <li *ngFor="let client of suggestedClients" (click)="selectClient(client)"
+            class="px-3 py-2 hover:bg-gray-100 cursor-pointer">
+            {{ client.firstname }} {{ client.lastname }} ({{ client.phone }} - {{ client.email }})
+          </li>
+        </ul>
       </div>
       <div>
         <label class="block font-semibold">Ημερομηνία</label>
-        <input
-          type="date"
-          [(ngModel)]="selectedBooking.date"
-          name="date"
-          class="w-full border p-2 rounded"
-          required
-        />
+        <input type="date" [(ngModel)]="selectedBooking.date" name="date" class="w-full border p-2 rounded" required />
       </div>
 
       <div class="flex gap-4">
         <div class="flex-1">
           <label class="block font-semibold">Ώρα Έναρξης</label>
           <div class="flex items-center gap-2">
-            <input
-              type="time"
-              [(ngModel)]="selectedBooking.start_time"
-              name="start_time"
-              class="w-full border p-2 rounded"
-              required
-            />
+            <input type="time" [(ngModel)]="selectedBooking.start_time" name="start_time"
+              class="w-full border p-2 rounded" required />
             <div class="flex flex-col gap-1">
-              <button
-                type="button"
-                (click)="adjustTime('start_time', 30)"
-                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-              >
+              <button type="button" (click)="adjustTime('start_time', 30, 'selected')"
+                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
                 +
               </button>
-              <button
-                type="button"
-                (click)="adjustTime('start_time', -30)"
-                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-              >
+              <button type="button" (click)="adjustTime('start_time', -30, 'selected')"
+                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
                 −
               </button>
             </div>
@@ -177,27 +228,15 @@
         <div class="flex-1">
           <label class="block font-semibold">Ώρα Λήξης</label>
           <div class="flex items-center gap-2">
-            <input
-              type="time"
-              id="jwehkjs"
-              [(ngModel)]="selectedBooking.end_time"
-              name="end_time"
-              class="w-full border p-2 rounded"
-              required
-            />
+            <input type="time" id="jwehkjs" [(ngModel)]="selectedBooking.end_time" name="end_time"
+              class="w-full border p-2 rounded" required />
             <div class="flex flex-col gap-1">
-              <button
-                type="button"
-                (click)="adjustTime('end_time', 30)"
-                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-              >
+              <button type="button" (click)="adjustTime('end_time', 30, 'selected')"
+                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
                 +
               </button>
-              <button
-                type="button"
-                (click)="adjustTime('end_time', -30)"
-                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-              >
+              <button type="button" (click)="adjustTime('end_time', -30, 'selected')"
+                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
                 −
               </button>
             </div>
@@ -207,12 +246,7 @@
 
       <div>
         <label class="block font-semibold">Κουρέας</label>
-        <select
-          [(ngModel)]="selectedBooking.user_id"
-          name="user"
-          class="w-full border p-2 rounded"
-          required
-        >
+        <select [(ngModel)]="selectedBooking.user_id" name="user" class="w-full border p-2 rounded" required>
           <option *ngFor="let artist of artists" [value]="artist.user_id">
             {{ artist.name }}
           </option>
@@ -221,38 +255,33 @@
 
       <div>
         <label class="block font-semibold">Υπηρεσία</label>
-        <select
-          [(ngModel)]="selectedBooking.service_id"
-          name="service"
-          class="w-full border p-2 rounded"
-          required
-        >
+        <select [(ngModel)]="selectedBooking.service_id" name="service" class="w-full border p-2 rounded" required>
           <option *ngFor="let service of services" [value]="service.service_id">
             {{ service.name }} ({{ service.time }})
           </option>
         </select>
       </div>
 
+      <div class="mt-6">
+        <label class="flex items-center gap-2 text-sm">
+          <input [(ngModel)]="selectedBooking.bath" name="bath" type="checkbox"
+            class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+          <span>Λούσιμο</span>
+        </label>
+      </div>
+
       <div class="flex justify-between pt-4 space-x-4">
-        <button type="button" [disabled]="isSubmitting" 
-          [ngClass]="{
+        <button type="button" [disabled]="isSubmitting" [ngClass]="{
             'bg-red-500 hover:bg-red-800 cursor-pointer' : !isSubmitting,
             'cursor-wait': isSubmitting,
-          }"
-          class="bg-red-300 px-4 text-white py-2 rounded"
-          (click)="deleteBooking(selectedBooking.booking_id)"
-        >
+          }" class="bg-red-300 px-4 text-white py-2 rounded" (click)="deleteBooking(selectedBooking.booking_id)">
           Διαγραφή
         </button>
-        <button type="button" [disabled]="!modal.form.valid || isSubmitting"
-          [ngClass]="{
+        <button type="button" [disabled]="!modal.form.valid || isSubmitting" [ngClass]="{
             'bg-blue-600 hover:bg-blue-800 cursor-pointer' : modal.form.valid && !isSubmitting,
             'cursor-not-allowed': !modal.form.valid || !isSubmitting,
             'cursor-wait': isSubmitting,
-          }"
-          class="bg-blue-300 px-4 cursor-pointer text-white py-2 rounded"
-          (click)="saveBookingChanges()"
-        >
+          }" class="bg-blue-300 px-4 cursor-pointer text-white py-2 rounded" (click)="saveBookingChanges()">
           Αποθήκευση
         </button>
       </div>
@@ -260,24 +289,15 @@
   </div>
 </div>
 
-<div
-	*ngIf="newBookingModal"
-	class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-  (click)="closeNewBookingModal()"
->
-	<div
-		class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full relative"
-		(click)="$event.stopPropagation()"
-	>
-		<!-- Close Button -->
-		<button
-			class="text-2xl absolute top-5 right-5 text-gray-500 hover:text-gray-800"
-			(click)="closeNewBookingModal()"
-		>
-			&times;
-		</button>
+<div *ngIf="newBookingModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+  (click)="closeNewBookingModal()">
+  <div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full relative" (click)="$event.stopPropagation()">
+    <!-- Close Button -->
+    <button class="text-2xl absolute top-5 right-5 text-gray-500 hover:text-gray-800" (click)="closeNewBookingModal()">
+      &times;
+    </button>
 
-		<h2 class="text-xl font-bold mb-4">Νέα Κράτηση</h2>
+    <h2 class="text-xl font-bold mb-4">Νέα Κράτηση</h2>
 
     <form #newBookingForm="ngForm" class="space-y-4 text-sm">
       <div>
@@ -292,70 +312,91 @@
         <label class="block font-semibold">Email</label>
         <input type="email" name="email" [(ngModel)]="newBooking.email" class="w-full border p-2 rounded" />
       </div>
-      <div>
+      <div class="relative" #phoneInputWrapper>
         <label class="block font-semibold">Τηλέφωνο</label>
-        <input type="tel" name="phone" [(ngModel)]="newBooking.phone" class="w-full border p-2 rounded" />
+        <input type="tel" name="phone" [(ngModel)]="newBooking.phone" class="w-full border p-2 rounded"
+          (input)="onPhoneInput(newBooking.phone || '', 'new')" (focus)="activateSuggestions('new')" />
+
+        <ul *ngIf="suggestedClients.length > 0 && showSuggestions"
+          class="absolute z-10 bg-white border border-gray-300 w-full rounded mt-1 shadow max-h-40 overflow-y-auto">
+          <li *ngFor="let client of suggestedClients" (click)="selectClient(client)"
+            class="px-3 py-2 hover:bg-gray-100 cursor-pointer">
+            {{ client.firstname }} {{ client.lastname }} ({{ client.phone }} - {{ client.email }})
+          </li>
+        </ul>
       </div>
+
       <div>
         <label class="block font-semibold">Ημερομηνία</label>
         <input type="date" name="date" [(ngModel)]="newBooking.date" class="w-full border p-2 rounded" required />
       </div>
-    
+
       <div class="flex gap-4">
         <div class="flex-1">
           <label class="block font-semibold">Ώρα Έναρξης</label>
           <div class="flex items-center gap-2">
-            <input type="time" name="start_time" [(ngModel)]="newBooking.start_time" class="w-full border p-2 rounded" required />
+            <input type="time" name="start_time" [(ngModel)]="newBooking.start_time" class="w-full border p-2 rounded"
+              required />
             <div class="flex flex-col gap-1">
-              <button type="button" (click)="adjustTime('start_time', 30)" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">+</button>
-              <button type="button" (click)="adjustTime('start_time', -30)" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">−</button>
+              <button type="button" (click)="adjustTime('start_time', 30, 'new')"
+                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">+</button>
+              <button type="button" (click)="adjustTime('start_time', -30, 'new')"
+                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">−</button>
             </div>
           </div>
         </div>
-    
+
         <div class="flex-1">
           <label class="block font-semibold">Ώρα Λήξης</label>
           <div class="flex items-center gap-2">
-            <input type="time" name="end_time" [(ngModel)]="newBooking.end_time" class="w-full border p-2 rounded" required />
+            <input type="time" name="end_time" [(ngModel)]="newBooking.end_time" class="w-full border p-2 rounded"
+              required />
             <div class="flex flex-col gap-1">
-              <button type="button" (click)="adjustTime('end_time', 30)" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">+</button>
-              <button type="button" (click)="adjustTime('end_time', -30)" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">−</button>
+              <button type="button" (click)="adjustTime('end_time', 30, 'new')"
+                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">+</button>
+              <button type="button" (click)="adjustTime('end_time', -30, 'new')"
+                class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">−</button>
             </div>
           </div>
         </div>
       </div>
-    
+
       <div>
         <label class="block font-semibold">Κουρέας</label>
         <select name="user" [(ngModel)]="newBooking.user_id" class="w-full border p-2 rounded" required>
           <option *ngFor="let artist of artists" [value]="artist.user_id">{{ artist.name }}</option>
         </select>
       </div>
-    
+
       <div>
         <label class="block font-semibold">Υπηρεσία</label>
-        <select name="service" [(ngModel)]="newBooking.service_id" class="w-full border p-2 rounded" required>
-          <option *ngFor="let service of services" [value]="service.service_id">
+        <select name="service" [(ngModel)]="newBooking.service_id" class="w-full border p-2 rounded" required
+          (change)="onServiceChange()">
+          <option *ngFor="let service of services" [value]="service.service_id" [attr.data-time]="service.time">
             {{ service.name }} ({{ service.time }})
           </option>
         </select>
       </div>
-    
+
+      <div class="mt-6">
+        <label class="flex items-center gap-2 text-sm">
+          <input [(ngModel)]="newBooking.bath" name="bath" type="checkbox"
+            class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+          <span>Λούσιμο</span>
+        </label>
+      </div>
+
       <!-- Action Buttons -->
       <div class="flex justify-end pt-4 space-x-4">
-        <button type="button" [disabled]="!newBookingForm.form.valid || isSubmitting"
-          [ngClass]="{
+        <button type="button" [disabled]="!newBookingForm.form.valid || isSubmitting" [ngClass]="{
             'bg-blue-600 hover:bg-blue-800 cursor-pointer': newBookingForm.form.valid && !isSubmitting,
             'cursor-not-allowed': !newBookingForm.form.valid || isSubmitting,
             'cursor-wait': isSubmitting
-          }"
-          class="w-full bg-blue-300 px-4 text-white py-2 rounded"
-          (click)="saveNewBooking()"
-        >
+          }" class="w-full bg-blue-300 px-4 text-white py-2 rounded" (click)="saveNewBooking()">
           Δημιουργία
         </button>
       </div>
     </form>
-    
-	</div>
+
+  </div>
 </div>

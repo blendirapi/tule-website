@@ -30,6 +30,8 @@ export class BookingComponent {
   selectedArtistName: string | null = null;
   selectedService: string | null = null;
   selectedServiceName: string | null = null;
+  price: number | null = null;
+  bath: string | null = '';
   selectedDate: Date | null = null;
   selectedTime: string | null = null;
   bookingComplete = false;
@@ -48,6 +50,14 @@ export class BookingComponent {
 
   onServiceSelectedName(name: string): void {
     this.selectedServiceName = name;
+  }
+
+  onServicePrice(price: number): void {
+    this.price = price;
+  }
+
+  onServiceHasBath(hasBath: string): void {
+    this.bath = hasBath;
   }
 
   onDateSelected(date: Date): void {

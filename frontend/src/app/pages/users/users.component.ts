@@ -2,8 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import CryptoJS from 'crypto-js';
 import { DashboardNavComponent } from '../../components/dashboard-nav/dashboard-nav.component';
+
+type WeekDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
+interface WeekDayItem {
+	key: WeekDay;
+	label: string;
+}
 
 @Component({
 	selector: 'app-users',
@@ -13,14 +19,50 @@ import { DashboardNavComponent } from '../../components/dashboard-nav/dashboard-
 })
 export class UsersComponent implements OnInit {
 	users: any[] = [];
-	form = { user_id: null, name: '', username: '', password: '', isVisible: false };
-	isEditing: Boolean = false;
-	isSubmitting: Boolean = false;
+	isEditing = false;
+	isSubmitting = false;
+
+	weekDays: WeekDayItem[] = [
+		{ key: 'monday', label: 'Δευτέρα' },
+		{ key: 'tuesday', label: 'Τρίτη' },
+		{ key: 'wednesday', label: 'Τετάρτη' },
+		{ key: 'thursday', label: 'Πέμπτη' },
+		{ key: 'friday', label: 'Παρασκευή' },
+		{ key: 'saturday', label: 'Σάββατο' },
+		{ key: 'sunday', label: 'Κυριακή' }
+	];
+
+	form: ReturnType<typeof this.getEmptyForm> = this.getEmptyForm();
 
 	constructor(private http: HttpClient) { }
 
 	ngOnInit() {
 		this.loadUsers();
+	}
+
+	getEmptyForm() {
+		const createDaySlots = () => [
+			{ start: '00:00', end: '00:00' },
+			{ start: '00:00', end: '00:00' }
+		];
+
+		return {
+			userId: null,
+			name: '',
+			username: '',
+			email: '',
+			password: '',
+			isVisible: false,
+			workingHours: {
+				monday: createDaySlots(),
+				tuesday: createDaySlots(),
+				wednesday: createDaySlots(),
+				thursday: createDaySlots(),
+				friday: createDaySlots(),
+				saturday: createDaySlots(),
+				sunday: createDaySlots()
+			}
+		};
 	}
 
 	loadUsers() {
@@ -34,17 +76,17 @@ export class UsersComponent implements OnInit {
 	async saveUser() {
 		this.isSubmitting = true;
 		try {
-			const hash = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(this.form.password)).toString();
-
 			const userPayload = {
-				user_id: this.form.user_id,
+				userId: this.form.userId,
 				name: this.form.name,
 				username: this.form.username,
-				password: hash,
-				isVisible: this.form.isVisible
+				email: this.form.email,
+				password: this.form.password,
+				isVisible: this.form.isVisible,
+				workingHours: this.form.workingHours
 			};
 
-			const apiUrl = this.isEditing ? `/v0/api/user/${this.form.user_id}` : `/v0/api/users`;
+			const apiUrl = this.isEditing ? `/v0/api/user/${this.form.userId}` : `/v0/api/users`;
 			const method = this.isEditing ? 'put' : 'post';
 
 			this.http[method](apiUrl, userPayload).subscribe(() => {
@@ -57,7 +99,26 @@ export class UsersComponent implements OnInit {
 	}
 
 	editUser(user: any) {
-		this.form = { ...user, password: '' };
+		const emptyForm = this.getEmptyForm();
+		const mergedWorkingHours: any = {};
+
+		for (const day of this.weekDays) {
+			const key = day.key;
+			const userDaySlots = user.workingHours?.[key] ?? [];
+
+			mergedWorkingHours[key] = [
+				userDaySlots[0] ?? { start: '00:00', end: '00:00' },
+				userDaySlots[1] ?? { start: '00:00', end: '00:00' },
+			];
+		}
+
+		this.form = {
+			...emptyForm,
+			...structuredClone(user),
+			workingHours: mergedWorkingHours,
+			password: ''
+		};
+
 		this.isEditing = true;
 	}
 
@@ -69,6 +130,6 @@ export class UsersComponent implements OnInit {
 
 	cancelEdit() {
 		this.isEditing = false;
-		this.form = { user_id: null, name: '', username: '', password: '', isVisible: false };
+		this.form = this.getEmptyForm();
 	}
 }

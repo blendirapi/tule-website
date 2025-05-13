@@ -11,7 +11,7 @@ registerLocaleData(localeEl);
 
 interface DateAvailability {
 	date: Date;
-	availability: 'high' | 'medium' | 'low' | 'none';
+	availability: 'high' | 'low' | 'none';
 }
 
 interface ApiAvailabilityResponse {
@@ -87,7 +87,7 @@ export class BookCalendarComponent implements OnInit {
 
 			this.dateAvailabilities.push({
 				date: new Date(currentDate),
-				availability: availabilityClass as 'high' | 'medium' | 'low' | 'none',
+				availability: availabilityClass as 'high' | 'low' | 'none',
 			});
 
 			currentDate.setDate(currentDate.getDate() + 1);
@@ -106,7 +106,7 @@ export class BookCalendarComponent implements OnInit {
 		return this.getDateAvailability(date) !== 'none';
 	};
 
-	getDateAvailability(date: Date): 'high' | 'medium' | 'low' | 'none' {
+	getDateAvailability(date: Date): 'high' | 'low' | 'none' {
 		const found = this.dateAvailabilities.find(
 			(d) =>
 				d.date.getDate() === date.getDate() &&

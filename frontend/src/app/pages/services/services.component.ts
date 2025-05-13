@@ -12,7 +12,7 @@ import { DashboardNavComponent } from '../../components/dashboard-nav/dashboard-
 })
 export class ServicesComponent implements OnInit {
   services: any[] = [];
-  form = { service_id: null, name: '', color: '', price: 0, time: '' };
+  form = { service_id: null, name: '', color: '', time: '' };
   isEditing: Boolean = false;
   isSubmitting: Boolean = false;
 
@@ -56,7 +56,7 @@ export class ServicesComponent implements OnInit {
   }
 
   cancelEdit() {
-    this.form = { service_id: null, name: '', color: '', price: 0, time: '' };
+    this.form = { service_id: null, name: '', color: '', time: '' };
     this.isEditing = false;
   }
 }

@@ -1,8 +1,6 @@
 <nav class="bg-white shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div
-      class="flex flex-col sm:flex-row sm:justify-between h-auto sm:h-16 py-4 sm:py-0 items-center relative"
-    >
+    <div class="flex flex-col sm:flex-row sm:justify-between h-auto sm:h-16 py-4 sm:py-0 items-center relative">
       <!-- Logo -->
       <div class="flex-shrink-0 flex items-center">
         <a href="/dashboard" class="flex items-center">
@@ -11,49 +9,41 @@
         </a>
       </div>
 
-      <!-- Buttons for large screens (centered) -->
-      <div
-        class="hidden sm:absolute sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:flex sm:space-x-8"
-      >
-        <a
-          href="/dashboard"
-          class="border-transparent text-gray-700 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:border-b-2 after:border-gray-700 after:scale-x-0 after:transition-all after:duration-300 after:ease-out hover:after:scale-x-100"
-        >
+      <!-- Centered navigation for large screens -->
+      <div class="hidden sm:absolute sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:flex sm:space-x-8">
+        <a href="/dashboard"
+          class="border-transparent text-gray-700 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:border-b-2 after:border-gray-700 after:scale-x-0 after:transition-all after:duration-300 after:ease-out hover:after:scale-x-100">
           Κρατήσεις
         </a>
-        <a
-          href="/dashboard/users"
-          class="border-transparent text-gray-700 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:border-b-2 after:border-gray-700 after:scale-x-0 after:transition-all after:duration-300 after:ease-out hover:after:scale-x-100"
-        >
+        <a href="/dashboard/users"
+          class="border-transparent text-gray-700 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:border-b-2 after:border-gray-700 after:scale-x-0 after:transition-all after:duration-300 after:ease-out hover:after:scale-x-100">
           Χρήστες
         </a>
-        <a
-          href="/dashboard/services"
-          class="border-transparent text-gray-700 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:border-b-2 after:border-gray-700 after:scale-x-0 after:transition-all after:duration-300 after:ease-out hover:after:scale-x-100"
-        >
+        <a href="/dashboard/services"
+          class="border-transparent text-gray-700 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:border-b-2 after:border-gray-700 after:scale-x-0 after:transition-all after:duration-300 after:ease-out hover:after:scale-x-100">
           Υπηρεσίες
         </a>
       </div>
 
+      <!-- Right-aligned logout button -->
+      <div class="sm:absolute sm:right-0 mt-4 sm:mt-0">
+        <button
+          class="border-transparent text-gray-700 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:border-b-2 after:border-gray-700 after:scale-x-0 after:transition-all after:duration-300 after:ease-out hover:after:scale-x-100"
+          (click)="logout()">
+          Αποσύνδεση
+        </button>
+      </div>
+
       <!-- Buttons for mobile (horizontal and centered) -->
       <div class="flex sm:hidden justify-center space-x-4 mt-4">
-        <a
-          href="/dashboard"
-          class="text-gray-700 text-md font-medium px-3 py-1 rounded"
-        >
-          Dashboard
+        <a href="/dashboard" class="text-gray-700 text-md font-medium px-3 py-1 rounded">
+          Κρατήσεις
         </a>
-        <a
-          href="/dashboard/users"
-          class="text-gray-700 text-md font-medium px-3 py-1 rounded"
-        >
-          Users
+        <a href="/dashboard/users" class="text-gray-700 text-md font-medium px-3 py-1 rounded">
+          Χρήστες
         </a>
-        <a
-          href="/dashboard/services"
-          class="text-gray-700 text-md font-medium px-3 py-1 rounded"
-        >
-          Services
+        <a href="/dashboard/services" class="text-gray-700 text-md font-medium px-3 py-1 rounded">
+          Υπηρεσίες
         </a>
       </div>
     </div>

@@ -1,13 +1,9 @@
-import {
-  AfterViewInit,
-  Component,
-  CUSTOM_ELEMENTS_SCHEMA,
-} from '@angular/core';
 import { BannerComponent } from '../../components/banner/banner.component';
 import { BookButtonComponent } from '../../components/book-button/book-button.component';
 import { HeaderComponent } from '../../components/header/header.component';
 import { FooterComponent } from '../../components/footer/footer.component';
 import { CommonModule, NgStyle } from '@angular/common';
+import { AfterViewInit, Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import Swiper from 'swiper';
 import { Navigation, Scrollbar, Autoplay } from 'swiper/modules';
 
@@ -21,7 +17,6 @@ Swiper.use([Navigation, Scrollbar, Autoplay]);
     FooterComponent,
     BannerComponent,
     BookButtonComponent,
-    NgStyle,
     CommonModule,
   ],
   templateUrl: './home.component.html',

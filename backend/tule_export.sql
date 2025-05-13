@@ -5,7 +5,7 @@
 -- Dumped from database version 16.8
 -- Dumped by pg_dump version 16.8
 
--- Started on 2025-04-26 00:08:19
+-- Started on 2025-05-14 00:30:53
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -18,9 +18,8 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-DROP DATABASE tuledb;
 --
--- TOC entry 4869 (class 1262 OID 24718)
+-- TOC entry 4889 (class 1262 OID 24718)
 -- Name: tuledb; Type: DATABASE; Schema: -; Owner: postgres
 --
 
@@ -29,7 +28,7 @@ CREATE DATABASE tuledb WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVID
 
 ALTER DATABASE tuledb OWNER TO postgres;
 
-connect tuledb
+\connect tuledb
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -53,17 +52,16 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.bookings (
     booking_id integer NOT NULL,
-    firstname character varying(255) NOT NULL,
-    lastname character varying(255) NOT NULL,
-    email character varying(255) NOT NULL,
-    phone character varying(255) NOT NULL,
+    firstname character varying(255),
+    lastname character varying(255),
+    email character varying(255),
+    phone character varying(255),
     date date NOT NULL,
     start_time character varying NOT NULL,
     end_time character varying NOT NULL,
     user_id integer,
     service_id integer,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    bath boolean DEFAULT false NOT NULL
 );
 
 
@@ -86,12 +84,53 @@ CREATE SEQUENCE public.bookings_booking_id_seq
 ALTER SEQUENCE public.bookings_booking_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4870 (class 0 OID 0)
+-- TOC entry 4890 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: bookings_booking_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE public.bookings_booking_id_seq OWNED BY public.bookings.booking_id;
+
+
+--
+-- TOC entry 224 (class 1259 OID 24799)
+-- Name: clients; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.clients (
+    client_id integer NOT NULL,
+    firstname character varying(50),
+    lastname character varying(50),
+    email character varying(100),
+    phone character varying(20)
+);
+
+
+ALTER TABLE public.clients OWNER TO postgres;
+
+--
+-- TOC entry 223 (class 1259 OID 24798)
+-- Name: clients_client_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.clients_client_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.clients_client_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4891 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: clients_client_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.clients_client_id_seq OWNED BY public.clients.client_id;
 
 
 --
@@ -102,7 +141,8 @@ ALTER SEQUENCE public.bookings_booking_id_seq OWNED BY public.bookings.booking_i
 CREATE TABLE public.services (
     service_id integer NOT NULL,
     name character varying(255) NOT NULL,
-    color character varying(255) NOT NULL
+    color character varying(255) NOT NULL,
+    "time" character varying(15)
 );
 
 
@@ -125,7 +165,7 @@ CREATE SEQUENCE public.services_service_id_seq
 ALTER SEQUENCE public.services_service_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4871 (class 0 OID 0)
+-- TOC entry 4892 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: services_service_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -143,8 +183,8 @@ CREATE TABLE public.users (
     name character varying(255) NOT NULL,
     username character varying(255) NOT NULL,
     password character varying(255) NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    is_visible boolean,
+    email character varying(255)
 );
 
 
@@ -167,7 +207,7 @@ CREATE SEQUENCE public.users_user_id_seq
 ALTER SEQUENCE public.users_user_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4872 (class 0 OID 0)
+-- TOC entry 4893 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: users_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
@@ -176,7 +216,48 @@ ALTER SEQUENCE public.users_user_id_seq OWNED BY public.users.user_id;
 
 
 --
--- TOC entry 4702 (class 2604 OID 24745)
+-- TOC entry 222 (class 1259 OID 24777)
+-- Name: working_hours; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.working_hours (
+    working_hour_id integer NOT NULL,
+    user_id integer,
+    day_of_week character varying(50),
+    start_time character varying(10),
+    end_time character varying(10)
+);
+
+
+ALTER TABLE public.working_hours OWNER TO postgres;
+
+--
+-- TOC entry 221 (class 1259 OID 24776)
+-- Name: working_hours_working_hour_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.working_hours_working_hour_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.working_hours_working_hour_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4894 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: working_hours_working_hour_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.working_hours_working_hour_id_seq OWNED BY public.working_hours.working_hour_id;
+
+
+--
+-- TOC entry 4710 (class 2604 OID 24745)
 -- Name: bookings booking_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -184,7 +265,15 @@ ALTER TABLE ONLY public.bookings ALTER COLUMN booking_id SET DEFAULT nextval('pu
 
 
 --
--- TOC entry 4698 (class 2604 OID 24723)
+-- TOC entry 4713 (class 2604 OID 24802)
+-- Name: clients client_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.clients ALTER COLUMN client_id SET DEFAULT nextval('public.clients_client_id_seq'::regclass);
+
+
+--
+-- TOC entry 4708 (class 2604 OID 24723)
 -- Name: services service_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -192,7 +281,7 @@ ALTER TABLE ONLY public.services ALTER COLUMN service_id SET DEFAULT nextval('pu
 
 
 --
--- TOC entry 4699 (class 2604 OID 24732)
+-- TOC entry 4709 (class 2604 OID 24732)
 -- Name: users user_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -200,83 +289,182 @@ ALTER TABLE ONLY public.users ALTER COLUMN user_id SET DEFAULT nextval('public.u
 
 
 --
--- TOC entry 4863 (class 0 OID 24742)
+-- TOC entry 4712 (class 2604 OID 24780)
+-- Name: working_hours working_hour_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.working_hours ALTER COLUMN working_hour_id SET DEFAULT nextval('public.working_hours_working_hour_id_seq'::regclass);
+
+
+--
+-- TOC entry 4879 (class 0 OID 24742)
 -- Dependencies: 220
 -- Data for Name: bookings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.bookings VALUES (7, 'Jasper', 'Fox', 'fadarotuwo@mailinator.com', '+1 (635) 557-5678', '2025-04-30', '10:00', '15:30', 2, 2, '2025-04-24 23:38:54.700821', '2025-04-24 23:38:54.700821');
-INSERT INTO public.bookings VALUES (8, 'Clare', 'Case', 'lapakyn@mailinator.com', '+1 (473) 693-6622', '2025-04-30', '20:30', '21:00', 2, 2, '2025-04-25 00:30:41.623642', '2025-04-25 00:30:41.623642');
-INSERT INTO public.bookings VALUES (10, 'Idola', 'Whitfield', 'dehy@mailinator.com', '+1 (189) 133-3544', '2025-04-30', '18:30', '19:00', 2, 2, '2025-04-25 00:30:56.227707', '2025-04-25 00:30:56.227707');
-INSERT INTO public.bookings VALUES (13, 'Beverly', 'Bradley', 'sukysimenu@mailinator.com', '+1 (121) 822-2768', '2025-04-30', '20:00', '20:30', 2, 2, '2025-04-25 01:01:55.423339', '2025-04-25 01:01:55.423339');
-INSERT INTO public.bookings VALUES (18, 'Calista', 'Roman', 'waboda@mailinator.com', '+1 (981) 927-3283', '2025-04-30', '16:30', '17:00', 2, 2, '2025-04-25 11:02:13.649085', '2025-04-25 11:02:13.649085');
-INSERT INTO public.bookings VALUES (19, 'Vera', 'Barr', 'boviro@mailinator.com', '+1 (767) 907-2904', '2025-04-30', '17:00', '17:30', 2, 2, '2025-04-25 11:04:59.514409', '2025-04-25 11:04:59.514409');
-INSERT INTO public.bookings VALUES (21, 'aaaaaaa', 'aaaaaaa', 'cyno@mailinator.com', '+1 (363) 889-5319', '2025-04-30', '17:30', '18:00', 2, 2, '2025-04-25 11:08:08.280604', '2025-04-25 11:08:08.280604');
-INSERT INTO public.bookings VALUES (22, 'Russell', 'Lynn', 'luladadiky@mailinator.com', '+1 (716) 184-4311', '2025-04-30', '18:00', '18:30', 2, 2, '2025-04-25 11:11:03.465392', '2025-04-25 11:11:03.465392');
-INSERT INTO public.bookings VALUES (23, 'Aileen', 'Allen', 'zagivuwi@mailinator.com', '+1 (738) 621-7199', '2025-04-30', '18:00', '18:30', 2, 2, '2025-04-25 11:13:16.730387', '2025-04-25 11:13:16.730387');
-INSERT INTO public.bookings VALUES (24, 'Armando', 'Dennis', 'ziqodudivy@mailinator.com', '+1 (602) 376-1414', '2025-04-30', '19:00', '19:30', 2, 2, '2025-04-25 11:14:07.451923', '2025-04-25 11:14:07.451923');
-INSERT INTO public.bookings VALUES (25, 'Octavia', 'Delgado', 'gociwojyh@mailinator.com', '+1 (885) 169-6914', '2025-04-30', '19:30', '20:00', 2, 2, '2025-04-25 11:15:55.289179', '2025-04-25 11:15:55.289179');
-INSERT INTO public.bookings VALUES (26, 'Wanda', 'Osborne', 'qoqugukun@mailinator.com', '+1 (864) 924-8765', '2025-04-29', '12:30', '13:00', 2, 2, '2025-04-25 11:16:51.123559', '2025-04-25 11:16:51.123559');
-INSERT INTO public.bookings VALUES (27, 'Bryar', 'Allen', 'rixud@mailinator.com', '+1 (929) 511-8554', '2025-04-26', '11:00', '11:30', 2, 1, '2025-04-25 11:17:23.806409', '2025-04-25 11:17:23.806409');
-INSERT INTO public.bookings VALUES (28, 'Chava', 'Workman', 'qaquwygyr@mailinator.com', '+1 (857) 309-9194', '2025-04-26', '17:00', '17:30', 2, 2, '2025-04-25 11:21:43.071032', '2025-04-25 11:21:43.071032');
-INSERT INTO public.bookings VALUES (29, 'Risa', 'Madden', 'zanasuhuby@mailinator.com', '+1 (666) 386-1968', '2025-04-26', '09:30', '10:00', 2, 2, '2025-04-25 11:24:04.87172', '2025-04-25 11:24:04.87172');
-INSERT INTO public.bookings VALUES (30, 'Dara', 'Branch', 'xigiqic@mailinator.com', '+1 (585) 707-2415', '2025-04-29', '17:30', '18:00', 2, 2, '2025-04-25 11:53:10.705481', '2025-04-25 11:53:10.705481');
-INSERT INTO public.bookings VALUES (14, 'Virginia', 'Rivas', 'vahitaqa@mailinator.com', '+1 (904) 707-8472', '2025-04-30', '09:00', '09:30', 1, 2, '2025-04-25 10:33:17.700683', '2025-04-25 10:33:17.700683');
-INSERT INTO public.bookings VALUES (15, 'Connor', 'Slater', 'vybuw@mailinator.com', '+1 (548) 204-6219', '2025-04-30', '09:30', '10:00', 1, 2, '2025-04-25 10:33:35.803281', '2025-04-25 10:33:35.803281');
-INSERT INTO public.bookings VALUES (16, 'Quemby', 'Moody', 'sefimek@mailinator.com', '+1 (961) 724-4264', '2025-04-30', '15:30', '16:00', 1, 2, '2025-04-25 10:34:51.233914', '2025-04-25 10:34:51.233914');
-INSERT INTO public.bookings VALUES (17, 'Jelani', 'Calhoun', 'nykiri@mailinator.com', '+1 (151) 864-1508', '2025-04-30', '16:00', '16:30', 1, 2, '2025-04-25 10:35:06.04996', '2025-04-25 10:35:06.04996');
-INSERT INTO public.bookings VALUES (31, 'Danielle', 'Clay', 'nepiv@mailinator.com', '+1 (574) 165-8637', '2025-04-30', '16:00', '16:30', 2, 2, '2025-04-25 23:50:34.186937', '2025-04-25 23:50:34.186937');
+INSERT INTO public.bookings VALUES (79, '', '', '', '', '2025-05-14', '09:00', '21:00', 1, 19, false);
+INSERT INTO public.bookings VALUES (81, 'Zephania', 'Robinson', 'qalici@mailinator.com', '+1 (473) 981-3421', '2025-05-21', '13:30', '14:00', 1, 2, true);
+INSERT INTO public.bookings VALUES (82, 'Nichole', 'Sullivan', 'kepejo@mailinator.com', '+1 (187) 853-4104', '2025-05-21', '13:00', '13:30', 1, 2, false);
+INSERT INTO public.bookings VALUES (83, 'Ivory', 'Riggs', 'xuvoro@mailinator.com', '1', '2025-05-21', '12:30', '13:00', 1, 1, false);
+INSERT INTO public.bookings VALUES (84, 'Ulric', 'Kim', 'zynute@mailinator.com', '2', '2025-05-22', '12:30', '13:00', 1, 1, false);
+INSERT INTO public.bookings VALUES (85, 'Kirestin', 'Schneider', 'teceko@mailinator.com', '1', '2025-05-24', '12:30', '13:00', 1, 1, false);
+INSERT INTO public.bookings VALUES (86, 'Paula', 'Mcclain', 'nady@mailinator.com', '+1 (294) 875-9516', '1990-06-30', '05:57', '10:57', 1, 15, true);
+INSERT INTO public.bookings VALUES (74, 'Ulric', 'Kim', 'zynute@mailinator.com', '1111111112', '2025-05-28', '10:00', '10:30', 1, 1, false);
+INSERT INTO public.bookings VALUES (88, 'Keely', 'Wheeler', 'huwade@mailinator.com', '+1 (236) 695-6962', '2009-01-28', '23:43', '03:43', 1, 14, false);
+INSERT INTO public.bookings VALUES (89, 'Lillian', 'Skinner', 'juvi@mailinator.com', '+1 (524) 973-3368', '2025-05-21', '11:00', '11:30', 1, 1, false);
+INSERT INTO public.bookings VALUES (90, 'Reed', 'Wilkinson', 'jocesale@mailinator.com', '+1 (495) 141-8955', '2025-05-15', '14:44', '15:14', 1, 2, true);
+INSERT INTO public.bookings VALUES (91, 'Quail', 'Kinney', 'bitoxe@mailinator.com', '+1 (169) 461-7176', '2024-05-14', '12:51', '16:51', 2, 14, true);
+INSERT INTO public.bookings VALUES (87, 'aaaaaa', 'aaaaaaaa', 'aaaaaaaaaaa', '1111111112', '2025-05-13', '14:00', '14:30', 1, 1, false);
+INSERT INTO public.bookings VALUES (94, 'Grant', 'Stark', 'tawilexery@mailinator.com', '+1 (117) 682-1586', '2025-05-13', '14:41', '15:41', 1, 11, true);
+INSERT INTO public.bookings VALUES (95, 'nhbgmjhngb', 'njhbg', 'nyhbgfnhgbfvd', 'nbgvfmnhgbf', '2025-05-13', '10:00', '14:00', 2, 14, false);
 
 
 --
--- TOC entry 4859 (class 0 OID 24720)
+-- TOC entry 4883 (class 0 OID 24799)
+-- Dependencies: 224
+-- Data for Name: clients; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.clients VALUES (1, 'Ivoryhfgtdtbgrvfd', 'Riggs', 'xuvoro@mailinator.com', '11111111111111');
+INSERT INTO public.clients VALUES (3, 'nhgbf', 'njhgbf', 'njhgbfv', 'jnhgb');
+INSERT INTO public.clients VALUES (5, 'Keely', 'Wheeler', 'huwade@mailinator.com', '+1 (236) 695-6962');
+INSERT INTO public.clients VALUES (6, 'Lillian', 'Skinner', 'juvi@mailinator.com', '+1 (524) 973-3368');
+INSERT INTO public.clients VALUES (7, 'Reed', 'Wilkinson', 'jocesale@mailinator.com', '+1 (495) 141-8955');
+INSERT INTO public.clients VALUES (8, 'Quail', 'Kinney', 'bitoxe@mailinator.com', '+1 (169) 461-7176');
+INSERT INTO public.clients VALUES (2, 'aaaaaa', 'aaaaaaaa', 'aaaaaaaaaaa', '1111111112');
+INSERT INTO public.clients VALUES (10, 'Jayme', 'Wall', 'socosih@mailinator.com', '+1 (617) 803-2026');
+INSERT INTO public.clients VALUES (11, '', '', '', '');
+INSERT INTO public.clients VALUES (12, 'Grant', 'Stark', 'tawilexery@mailinator.com', '+1 (117) 682-1586');
+INSERT INTO public.clients VALUES (13, 'nhbg', 'njhbg', 'nyhbgf', 'nbgvf');
+INSERT INTO public.clients VALUES (14, 'nhbgmjhngb', 'njhbg', 'nyhbgfnhgbfvd', 'nbgvfmnhgbf');
+
+
+--
+-- TOC entry 4875 (class 0 OID 24720)
 -- Dependencies: 216
 -- Data for Name: services; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.services VALUES (1, 'Κούρεμα', '#FF0000');
-INSERT INTO public.services VALUES (2, 'Κούρεμα & Γενιάδα', '#00FF00');
+INSERT INTO public.services VALUES (10, 'Tattoo', '#000000', '00:30');
+INSERT INTO public.services VALUES (11, 'Tattoo', '#000000', '01:00');
+INSERT INTO public.services VALUES (12, 'Tattoo', '#000000', '02:00');
+INSERT INTO public.services VALUES (13, 'Tattoo', '#000000', '03:00');
+INSERT INTO public.services VALUES (14, 'Tattoo', '#000000', '04:00');
+INSERT INTO public.services VALUES (15, 'Tattoo', '#000000', '05:00');
+INSERT INTO public.services VALUES (16, 'Tattoo', '#000000', '06:00');
+INSERT INTO public.services VALUES (2, 'Κούρεμα & Γενιάδα', '#0c16e2', '00:30');
+INSERT INTO public.services VALUES (1, 'Κούρεμα', '#1cbf20', '00:30');
+INSERT INTO public.services VALUES (19, 'Κενο', '#dd1313', '00:00');
 
 
 --
--- TOC entry 4861 (class 0 OID 24729)
+-- TOC entry 4877 (class 0 OID 24729)
 -- Dependencies: 218
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.users VALUES (1, 'Tule', 'tule', '123456', '2025-04-24 16:55:13.497852', '2025-04-24 16:55:13.497852');
-INSERT INTO public.users VALUES (2, 'Άγγελος', 'ahmeti', '1111', '2025-04-24 18:10:59.621866', '2025-04-24 18:10:59.621866');
+INSERT INTO public.users VALUES (2, 'Άγγελος', 'aggelos', '$argon2id$v=19$m=65536,t=1,p=16$v//E9Dz9W82cdGxGIpAgKg$ZLTqhhetTjVXXMyCzPedtyzR/lFEABymnmcyo73uyt0', true, 'aggelos@tule.gr');
+INSERT INTO public.users VALUES (8, 'admin', 'admin', '$argon2id$v=19$m=65536,t=1,p=16$AnV5GTtxnkzypKu+zclMQw$E2TGfHWN5E0e2mHmhQ3P36a4DPIDpYOf/+2gLQ+Tf1o', false, 'blendirapi@gmail.com');
+INSERT INTO public.users VALUES (1, 'Tule', 'tule', '$argon2id$v=19$m=65536,t=1,p=16$GV6xr5FM4Y9tDh+iRZcKRw$BLZkRCA7O+j/XE7JGgmjQjtWJFFUCpAmzSbD8ajeRmE', true, 'tule@tule.gr');
 
 
 --
--- TOC entry 4873 (class 0 OID 0)
+-- TOC entry 4881 (class 0 OID 24777)
+-- Dependencies: 222
+-- Data for Name: working_hours; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO public.working_hours VALUES (211, 1, 'monday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (212, 1, 'monday', '17:00', '21:00');
+INSERT INTO public.working_hours VALUES (213, 1, 'tuesday', '17:00', '21:00');
+INSERT INTO public.working_hours VALUES (214, 1, 'tuesday', '10:00', '14:00');
+INSERT INTO public.working_hours VALUES (215, 1, 'wednesday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (216, 1, 'wednesday', '10:00', '14:00');
+INSERT INTO public.working_hours VALUES (217, 1, 'thursday', '17:00', '21:00');
+INSERT INTO public.working_hours VALUES (218, 1, 'thursday', '10:00', '14:00');
+INSERT INTO public.working_hours VALUES (219, 1, 'friday', '17:00', '21:00');
+INSERT INTO public.working_hours VALUES (220, 1, 'friday', '10:00', '14:00');
+INSERT INTO public.working_hours VALUES (221, 1, 'saturday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (222, 1, 'saturday', '10:00', '18:00');
+INSERT INTO public.working_hours VALUES (223, 1, 'sunday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (224, 1, 'sunday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (183, 2, 'sunday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (184, 2, 'sunday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (185, 2, 'monday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (186, 2, 'monday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (187, 2, 'tuesday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (188, 2, 'tuesday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (189, 2, 'wednesday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (190, 2, 'wednesday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (191, 2, 'thursday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (192, 2, 'thursday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (193, 2, 'friday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (194, 2, 'friday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (195, 2, 'saturday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (196, 2, 'saturday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (197, 8, 'saturday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (198, 8, 'saturday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (199, 8, 'sunday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (200, 8, 'sunday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (201, 8, 'monday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (202, 8, 'monday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (203, 8, 'tuesday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (204, 8, 'tuesday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (205, 8, 'wednesday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (206, 8, 'wednesday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (207, 8, 'thursday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (208, 8, 'thursday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (209, 8, 'friday', '00:00', '00:00');
+INSERT INTO public.working_hours VALUES (210, 8, 'friday', '00:00', '00:00');
+
+
+--
+-- TOC entry 4895 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: bookings_booking_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.bookings_booking_id_seq', 31, true);
+SELECT pg_catalog.setval('public.bookings_booking_id_seq', 95, true);
 
 
 --
--- TOC entry 4874 (class 0 OID 0)
+-- TOC entry 4896 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: clients_client_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.clients_client_id_seq', 15, true);
+
+
+--
+-- TOC entry 4897 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: services_service_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.services_service_id_seq', 2, true);
+SELECT pg_catalog.setval('public.services_service_id_seq', 21, true);
 
 
 --
--- TOC entry 4875 (class 0 OID 0)
+-- TOC entry 4898 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_user_id_seq', 4, true);
+SELECT pg_catalog.setval('public.users_user_id_seq', 33, true);
 
 
 --
--- TOC entry 4712 (class 2606 OID 24751)
+-- TOC entry 4899 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: working_hours_working_hour_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.working_hours_working_hour_id_seq', 252, true);
+
+
+--
+-- TOC entry 4721 (class 2606 OID 24751)
 -- Name: bookings bookings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -285,7 +473,25 @@ ALTER TABLE ONLY public.bookings
 
 
 --
--- TOC entry 4706 (class 2606 OID 24727)
+-- TOC entry 4725 (class 2606 OID 24806)
+-- Name: clients clients_phone_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.clients
+    ADD CONSTRAINT clients_phone_key UNIQUE (phone);
+
+
+--
+-- TOC entry 4727 (class 2606 OID 24804)
+-- Name: clients clients_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.clients
+    ADD CONSTRAINT clients_pkey PRIMARY KEY (client_id);
+
+
+--
+-- TOC entry 4715 (class 2606 OID 24727)
 -- Name: services services_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -294,7 +500,7 @@ ALTER TABLE ONLY public.services
 
 
 --
--- TOC entry 4708 (class 2606 OID 24738)
+-- TOC entry 4717 (class 2606 OID 24738)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -303,7 +509,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4710 (class 2606 OID 24740)
+-- TOC entry 4719 (class 2606 OID 24740)
 -- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -312,7 +518,16 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4713 (class 2606 OID 24757)
+-- TOC entry 4723 (class 2606 OID 24782)
+-- Name: working_hours working_hours_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.working_hours
+    ADD CONSTRAINT working_hours_pkey PRIMARY KEY (working_hour_id);
+
+
+--
+-- TOC entry 4728 (class 2606 OID 24757)
 -- Name: bookings bookings_service_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -321,15 +536,24 @@ ALTER TABLE ONLY public.bookings
 
 
 --
--- TOC entry 4714 (class 2606 OID 24752)
+-- TOC entry 4729 (class 2606 OID 24793)
 -- Name: bookings bookings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.bookings
-    ADD CONSTRAINT bookings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id);
+    ADD CONSTRAINT bookings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 
 
--- Completed on 2025-04-26 00:08:20
+--
+-- TOC entry 4730 (class 2606 OID 24788)
+-- Name: working_hours working_hours_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.working_hours
+    ADD CONSTRAINT working_hours_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
+
+
+-- Completed on 2025-05-14 00:30:54
 
 --
 -- PostgreSQL database dump complete

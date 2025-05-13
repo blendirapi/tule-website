@@ -16,7 +16,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: DailyCalendarComponent, canActivate: [AuthGuard], title: 'Κρατήσεις | Tule Hood' },
   { path: 'dashboard/users', component: UsersComponent, canActivate: [AuthGuard], title: 'Χρήστες | Tule Hood' },
   { path: 'dashboard/services', component: ServicesComponent, canActivate: [AuthGuard], title: 'Υπηρεσίες | Tule Hood' },
-  { path: 'privacy', component: PrivacyPolicyComponent, title: 'Υπηρεσίες | Tule Hood' },
-  { path: 'terms', component: TermsAndConditionsComponent, title: 'Υπηρεσίες | Tule Hood' },
+  { path: 'privacy', component: PrivacyPolicyComponent, title: 'Πολιτική Απορρήτου | Tule Hood' },
+  { path: 'terms', component: TermsAndConditionsComponent, title: 'Όροι και Προϋποθέσεις | Tule Hood' },
   { path: '**', component: HomeComponent, title: 'Homepage | Tule Hood' },
 ];

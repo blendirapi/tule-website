@@ -23,6 +23,8 @@
       *ngIf="selectedArtist && !selectedService"
       (optionSelected)="onServiceSelected($event)"
       (optionSelectedName)="onServiceSelectedName($event)"
+      (price)="onServicePrice($event)"
+      (hasBath)="onServiceHasBath($event)"
     >
     </app-book-type>
 
@@ -49,6 +51,8 @@
       [selectedServiceName]="selectedServiceName"
       [selectedDate]="selectedDate"
       [selectedTime]="selectedTime"
+      [price]="price"
+      [hasBath]="bath ?? ''"
       (formSubmitted)="onFormSubmitted($event)">
     </app-book-data>
   

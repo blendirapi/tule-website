@@ -1,3 +1,4 @@
-Cookie Banner
-Legal texts etc
+Στο κλείσιμο μόνο mail και 3 ώρες πριν reminder mail και sms (και από το admin το ιδιο)
+Forgot password
+
 Update packages

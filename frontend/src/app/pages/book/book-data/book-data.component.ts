@@ -18,6 +18,7 @@ interface BookingFormData {
   lastName: string;
   phone: string;
   email: string;
+  bath: string;
 }
 
 interface NamesResponse {
@@ -44,6 +45,8 @@ export class BookDataComponent {
   @Input() selectedServiceName: string | null = null;
   @Input() selectedDate: Date | null = null;
   @Input() selectedTime: string | null = null;
+  @Input() price: number | null = null;
+  @Input() hasBath: string | '' = '';
 
   @Output() formSubmitted = new EventEmitter<boolean>();
 
@@ -81,7 +84,8 @@ export class BookDataComponent {
       firstName: this.firstName,
       lastName: this.lastName,
       phone: this.phone,
-      email: this.email
+      email: this.email,
+      bath: this.hasBath ? "true" : "false"
     };
 
     this.http.post<BookingResponse>('/v0/api/add_booking', formData)

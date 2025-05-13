@@ -13,6 +13,7 @@ import (
 
 	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -25,6 +26,7 @@ type User struct {
 	UserID    int    `json:"user_id"`
 	Name      string `json:"name"`
 	Username  string `json:"username"`
+	Email     string `json:"email"`
 	IsVisible bool   `json:"isVisible"`
 }
 
@@ -32,7 +34,6 @@ type Service struct {
 	ServiceID int    `json:"service_id"`
 	Name      string `json:"name"`
 	Color     string `json:"color"`
-	Price     int    `json:"price"`
 	Time      string `json:"time"`
 }
 
@@ -61,6 +62,7 @@ type BookingRequest struct {
 	LastName  string `json:"lastName"`
 	Phone     string `json:"phone"`
 	Email     string `json:"email"`
+	Bath      string `json:"bath"`
 }
 
 type BookingResponse struct {
@@ -82,6 +84,11 @@ type timeSlot struct {
 	end   time.Time
 }
 
+type timeRange struct {
+	startStr string
+	endStr   string
+}
+
 type AvailableTimesMonthlyResponse struct {
 	Success bool              `json:"success"`
 	Classes map[string]string `json:"classes"`
@@ -97,10 +104,34 @@ type Booking struct {
 	StartTime    string `json:"start_time"`
 	EndTime      string `json:"end_time"`
 	ServiceID    int    `json:"service_id"`
+	Bath         bool   `json:"bath"`
 	UserID       int    `json:"user_id"`
 	UserName     string `json:"user_name"`
 	ServiceName  string `json:"service_name"`
 	ServiceColor string `json:"service_color"`
+}
+
+type DisableDayRequest struct {
+	Status bool   `json:"status"`
+	Date   string `json:"date"`
+	UserID int    `json:"userId"`
+}
+
+type UserWithWorkingHours struct {
+	UserID       int                            `json:"userId"`
+	Name         string                         `json:"name"`
+	Username     string                         `json:"username"`
+	Email        string                         `json:"email"`
+	IsVisible    bool                           `json:"isVisible"`
+	WorkingHours map[string][]map[string]string `json:"workingHours"`
+}
+
+type Client struct {
+	ClientID  int    `json:"client_id"`
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
 }
 
 func main() {
@@ -112,8 +143,12 @@ func main() {
 	http.Handle("/v0/api/add_booking", cors(http.HandlerFunc(createBookingHandler)))
 	http.Handle("/v0/api/available_times", cors(http.HandlerFunc(availableTimesHandler)))
 	http.Handle("/v0/api/availability", cors(http.HandlerFunc(availableTimesMonthlyHandler)))
+	http.Handle("/v0/api/forgot_password", cors(http.HandlerFunc(forgotPasswordHandler)))
 
 	http.Handle("/v0/api/add_dash_booking", cors(auth(http.HandlerFunc(createDashBookingHandler))))
+	http.Handle("/v0/api/disable_day", cors(auth(http.HandlerFunc(disableDayHandler))))
+	http.Handle("/v0/api/get_client_data", cors(auth(http.HandlerFunc(clientDataHandler))))
+	http.Handle("/v0/api/dash_artists", cors(auth(http.HandlerFunc(dashArtistsHandler))))
 	http.Handle("/v0/api/get_bookings", cors(auth(http.HandlerFunc(getBookingsHandler))))
 	http.Handle("/v0/api/bookings/", cors(auth(http.HandlerFunc(bookingHandler))))
 	http.Handle("/v0/api/users", cors(auth(http.HandlerFunc(usersHandler))))
@@ -138,28 +173,33 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func dbConn() (*sql.DB, error) {
-	connStr := fmt.Sprintf("host=%s port=5432 user=%s password=%s dbname=%s sslmode=disable",
-		getEnv("DB_HOST", "localhost"),
-		getEnv("DB_USER", "postgres"),
-		getEnv("DB_PASSWORD", "123456"),
-		getEnv("DB_NAME", "tuledb"),
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		getEnv("DB_HOST"),
+		getEnv("DB_PORT"),
+		getEnv("DB_USER"),
+		getEnv("DB_PASSWORD"),
+		getEnv("DB_NAME"),
 	)
 	return sql.Open("postgres", connStr)
 }
 
-func getEnv(key, fallback string) string {
-	if val, ok := os.LookupEnv(key); ok {
-		return val
+func getEnv(key string) string {
+
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
 	}
-	return fallback
+
+	return os.Getenv(key)
 }
 
-var jwtKey = []byte("your_secret_key")
+var jwtKey = []byte(getEnv("JWT_SECRET"))
 
 func generateJWT(userID int) (string, error) {
 	claims := &jwt.StandardClaims{
 		Subject:   fmt.Sprint(userID),
-		ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+		ExpiresAt: time.Now().Add(2 * 30 * 24 * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -215,8 +255,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 	var password string
-	err = db.QueryRow("SELECT user_id, name, username, password FROM users WHERE username = $1", strings.TrimSpace(req.Username)).
-		Scan(&user.UserID, &user.Name, &user.Username, &password)
+	err = db.QueryRow("SELECT user_id, name, username, email, password FROM users WHERE username = $1 OR email = $1", strings.TrimSpace(req.Username)).
+		Scan(&user.UserID, &user.Name, &user.Username, &user.Email, &password)
 	if err != nil {
 		http.Error(w, `{"success":false,"message":"Το όνομα χρήστη ή ο κωδικός πρόσβασης είναι λάθος"}`, http.StatusUnauthorized)
 		return
@@ -254,30 +294,74 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		rows, err := db.Query("SELECT user_id, name, username, is_visible FROM users ORDER BY user_id")
+		rows, err := db.Query(`
+	SELECT u.user_id, u.name, u.username, u.email, u.is_visible, 
+	       w.day_of_week, w.start_time, w.end_time
+	FROM users u
+	LEFT JOIN working_hours w ON w.user_id = u.user_id
+	ORDER BY u.user_id DESC`)
 		if err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
 		}
 		defer rows.Close()
 
-		var users []User
+		usersMap := make(map[int]*UserWithWorkingHours)
+
 		for rows.Next() {
-			var u User
-			if rows.Scan(&u.UserID, &u.Name, &u.Username, &u.IsVisible) == nil {
-				users = append(users, u)
+			var (
+				id              int
+				name            string
+				username        string
+				email           string
+				isVisible       bool
+				day, start, end sql.NullString
+			)
+
+			err := rows.Scan(&id, &name, &username, &email, &isVisible, &day, &start, &end)
+			if err != nil {
+				http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+				return
+			}
+
+			if _, exists := usersMap[id]; !exists {
+				usersMap[id] = &UserWithWorkingHours{
+					UserID:       id,
+					Name:         name,
+					Username:     username,
+					Email:        email,
+					IsVisible:    isVisible,
+					WorkingHours: make(map[string][]map[string]string),
+				}
+			}
+
+			if day.Valid && start.Valid && end.Valid {
+				usersMap[id].WorkingHours[day.String] = append(usersMap[id].WorkingHours[day.String], map[string]string{
+					"start": start.String,
+					"end":   end.String,
+				})
 			}
 		}
+
+		var users []UserWithWorkingHours
+		for _, u := range usersMap {
+			users = append(users, *u)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(users)
 
 	case http.MethodPost:
 		var u struct {
-			Name      string `json:"name"`
-			Username  string `json:"username"`
-			Password  string `json:"password"`
-			IsVisible bool   `json:"isVisible"`
+			Name         string                         `json:"name"`
+			Username     string                         `json:"username"`
+			Email        string                         `json:"email"`
+			Password     string                         `json:"password"`
+			IsVisible    bool                           `json:"isVisible"`
+			WorkingHours map[string][]map[string]string `json:"workingHours"`
 		}
-		if json.NewDecoder(r.Body).Decode(&u) != nil {
+
+		if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
 			http.Error(w, `{"success":false}`, http.StatusBadRequest)
 			return
 		}
@@ -288,11 +372,39 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = db.Exec("INSERT INTO users (name, username, password, is_visible) VALUES ($1, $2, $3, $4)", u.Name, u.Username, hashedPassword, u.IsVisible)
+		// Insert the user and get user_id
+		var userID int
+		err = db.QueryRow(
+			"INSERT INTO users (name, username, email, password, is_visible) VALUES ($1, $2, $3, $4, $5) RETURNING user_id",
+			u.Name, u.Username, u.Email, hashedPassword, u.IsVisible,
+		).Scan(&userID)
+
 		if err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
 		}
+
+		// Insert working hours
+		stmt, err := db.Prepare("INSERT INTO working_hours (user_id, day_of_week, start_time, end_time) VALUES ($1, $2, $3, $4)")
+		if err != nil {
+			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+			return
+		}
+		defer stmt.Close()
+
+		for day, slots := range u.WorkingHours {
+			for _, slot := range slots {
+				start, end := slot["start"], slot["end"]
+				if start != "" && end != "" {
+					_, err := stmt.Exec(userID, day, start, end)
+					if err != nil {
+						http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+						return
+					}
+				}
+			}
+		}
+
 		w.Write([]byte(`{"success":true}`))
 
 	default:
@@ -317,11 +429,14 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPut:
 		var u struct {
-			Name      string `json:"name"`
-			Username  string `json:"username"`
-			Password  string `json:"password"`
-			IsVisible bool   `json:"isVisible"`
+			Name         string                         `json:"name"`
+			Username     string                         `json:"username"`
+			Email        string                         `json:"email"`
+			Password     string                         `json:"password"`
+			IsVisible    bool                           `json:"isVisible"`
+			WorkingHours map[string][]map[string]string `json:"workingHours"`
 		}
+
 		if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
 			http.Error(w, `{"success":false}`, http.StatusBadRequest)
 			return
@@ -338,16 +453,42 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, `{"success":false,"message":"Failed to hash password"}`, http.StatusInternalServerError)
 				return
 			}
-			query = "UPDATE users SET name=$1, username=$2, password=$3, is_visible=$4 WHERE user_id=$5"
-			params = []any{u.Name, u.Username, hashedPassword, u.IsVisible, id}
+			query = "UPDATE users SET name=$1, username=$2, email=$3, password=$4, is_visible=$5 WHERE user_id=$6"
+			params = []any{u.Name, u.Username, u.Email, hashedPassword, u.IsVisible, id}
 		} else {
-			query = "UPDATE users SET name=$1, username=$2, is_visible=$3 WHERE user_id=$4"
-			params = []any{u.Name, u.Username, u.IsVisible, id}
+			query = "UPDATE users SET name=$1, username=$2, email=$3, is_visible=$4 WHERE user_id=$5"
+			params = []any{u.Name, u.Username, u.Email, u.IsVisible, id}
 		}
 
 		if _, err := db.Exec(query, params...); err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
+		}
+
+		// Remove existing working hours
+		if _, err := db.Exec("DELETE FROM working_hours WHERE user_id = $1", id); err != nil {
+			http.Error(w, `{"success":false,"message":"Failed to clear working hours"}`, http.StatusInternalServerError)
+			return
+		}
+
+		// Insert updated working hours
+		stmt, err := db.Prepare("INSERT INTO working_hours (user_id, day_of_week, start_time, end_time) VALUES ($1, $2, $3, $4)")
+		if err != nil {
+			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+			return
+		}
+		defer stmt.Close()
+
+		for day, slots := range u.WorkingHours {
+			for _, slot := range slots {
+				start, end := slot["start"], slot["end"]
+				if start != "" && end != "" {
+					if _, err := stmt.Exec(id, day, start, end); err != nil {
+						http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+						return
+					}
+				}
+			}
 		}
 
 		w.Write([]byte(`{"success":true}`))
@@ -374,7 +515,7 @@ func servicesHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		rows, err := db.Query("SELECT service_id, name, color, price, time FROM services ORDER BY service_id")
+		rows, err := db.Query("SELECT service_id, name, color, time FROM services ORDER BY service_id")
 		if err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
@@ -384,20 +525,24 @@ func servicesHandler(w http.ResponseWriter, r *http.Request) {
 		var services []Service
 		for rows.Next() {
 			var s Service
-			if rows.Scan(&s.ServiceID, &s.Name, &s.Color, &s.Price, &s.Time) == nil {
+			if rows.Scan(&s.ServiceID, &s.Name, &s.Color, &s.Time) == nil {
 				services = append(services, s)
 			}
 		}
 		json.NewEncoder(w).Encode(services)
 
 	case http.MethodPost:
-		var s struct{ Name string; Color string; Price int; Time string }
+		var s struct {
+			Name  string
+			Color string
+			Time  string
+		}
 		if json.NewDecoder(r.Body).Decode(&s) != nil {
 			http.Error(w, `{"success":false}`, http.StatusBadRequest)
 			return
 		}
 
-		_, err = db.Exec("INSERT INTO services (name, color, price, time) VALUES ($1, $2, $3, $4)", s.Name, s.Color, s.Price, s.Time)
+		_, err = db.Exec("INSERT INTO services (name, color, time) VALUES ($1, $2, $3)", s.Name, s.Color, s.Time)
 		if err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
@@ -431,7 +576,7 @@ func serviceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = db.Exec("UPDATE services SET name=$1, color=$2, price=$3, time=$4 WHERE service_id=$5", s.Name, s.Color, s.Price, s.Time, s.ServiceID)
+		_, err = db.Exec("UPDATE services SET name=$1, color=$2, time=$3 WHERE service_id=$4", s.Name, s.Color, s.Time, s.ServiceID)
 		if err != nil {
 			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 			return
@@ -450,13 +595,35 @@ func serviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getWorkingHours(db *sql.DB, artistID int, weekday string) ([]timeRange, error) {
+	rows, err := db.Query(`
+		SELECT start_time, end_time 
+		FROM working_hours 
+		WHERE user_id = $1 AND LOWER(day_of_week) = LOWER($2)
+	`, artistID, weekday)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var hours []timeRange
+	for rows.Next() {
+		var start, end string
+		if err := rows.Scan(&start, &end); err != nil {
+			continue
+		}
+		hours = append(hours, timeRange{startStr: start, endStr: end})
+	}
+	return hours, nil
+}
+
 func availableTimesHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, `{"success":false}`, http.StatusMethodNotAllowed)
 		return
 	}
 
-	date := r.URL.Query().Get("date")
+	dateStr := r.URL.Query().Get("date")
 	artistID, _ := strconv.Atoi(r.URL.Query().Get("artist_id"))
 
 	db, err := dbConn()
@@ -466,15 +633,29 @@ func availableTimesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT start_time, end_time FROM bookings WHERE user_id = $1 AND date = $2", artistID, date)
+	rows, err := db.Query("SELECT date, start_time, end_time FROM bookings WHERE user_id = $1 AND date = $2", artistID, dateStr)
 	if err != nil {
 		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
+	location, _ := time.LoadLocation("Europe/Athens")
+	today := time.Now().In(location).Format("2006-01-02")
+	isToday := dateStr == today
+
 	bookedSlots := parseBookedSlots(rows)
-	availableSlots := calculateAvailableSlots(bookedSlots)
+
+	date, _ := time.Parse("2006-01-02", dateStr)
+
+	dayOfWeek := date.Weekday().String()
+	workingHours, err := getWorkingHours(db, artistID, dayOfWeek)
+	if err != nil {
+		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+		return
+	}
+
+	availableSlots := calculateAvailableSlots(bookedSlots, isToday, workingHours, date)
 
 	json.NewEncoder(w).Encode(AvailableTimesResponse{
 		Success: true,
@@ -485,29 +666,61 @@ func availableTimesHandler(w http.ResponseWriter, r *http.Request) {
 func parseBookedSlots(rows *sql.Rows) []timeSlot {
 	var slots []timeSlot
 	for rows.Next() {
+		var date time.Time
 		var startStr, endStr string
-		if rows.Scan(&startStr, &endStr) != nil {
+		if err := rows.Scan(&date, &startStr, &endStr); err != nil {
 			continue
 		}
 
-		start, _ := time.Parse("15:04", startStr)
-		end, _ := time.Parse("15:04", endStr)
+		loc, _ := time.LoadLocation("Europe/Athens")
+		// Combine actual date object with start/end time strings
+		startTime, errStart := time.ParseInLocation("15:04", startStr, loc)
+		endTime, errEnd := time.ParseInLocation("15:04", endStr, loc)
+
+		if errStart != nil || errEnd != nil {
+			continue
+		}
+
+		start := time.Date(date.Year(), date.Month(), date.Day(),
+			startTime.Hour(), startTime.Minute(), 0, 0, loc)
+		end := time.Date(date.Year(), date.Month(), date.Day(),
+			endTime.Hour(), endTime.Minute(), 0, 0, loc)
+
 		slots = append(slots, timeSlot{start, end})
 	}
 	return slots
 }
 
-func calculateAvailableSlots(booked []timeSlot) []string {
+func calculateAvailableSlots(booked []timeSlot, isToday bool, workingHours []timeRange, date time.Time) []string {
 	const slotDuration = 30 * time.Minute
-	start, _ := time.Parse("15:04", "09:30")
-	end, _ := time.Parse("15:04", "21:00")
+	loc, _ := time.LoadLocation("Europe/Athens")
 
 	var available []string
-	for current := start; current.Before(end); current = current.Add(slotDuration) {
-		slotEnd := current.Add(slotDuration)
-		if !isSlotBooked(current, slotEnd, booked) {
-			available = append(available, fmt.Sprintf("%s - %s",
-				current.Format("15:04"), slotEnd.Format("15:04")))
+
+	for _, tr := range workingHours {
+		startTime, err1 := time.ParseInLocation("15:04", tr.startStr, loc)
+		endTime, err2 := time.ParseInLocation("15:04", tr.endStr, loc)
+		if err1 != nil || err2 != nil {
+			continue
+		}
+
+		start := time.Date(date.Year(), date.Month(), date.Day(),
+			startTime.Hour(), startTime.Minute(), 0, 0, loc)
+		end := time.Date(date.Year(), date.Month(), date.Day(),
+			endTime.Hour(), endTime.Minute(), 0, 0, loc)
+
+		current := start
+		for current.Add(slotDuration).Before(end) || current.Add(slotDuration).Equal(end) {
+			slotEnd := current.Add(slotDuration)
+
+			if !isToday || (isToday && current.After(time.Now().In(loc))) {
+				if !isSlotBooked(current, slotEnd, booked) {
+					available = append(available, fmt.Sprintf("%s - %s",
+						current.Format("15:04"), slotEnd.Format("15:04")))
+				}
+			}
+
+			current = current.Add(slotDuration)
 		}
 	}
 	return available
@@ -555,30 +768,23 @@ func availableTimesMonthlyHandler(w http.ResponseWriter, r *http.Request) {
 	bookedSlotsByDate := parseBookedSlotsByDate(rows)
 
 	result := make(map[string]string)
+
+	location, _ := time.LoadLocation("Europe/Athens")
+	today := time.Now().In(location).Format("2006-01-02")
+
 	for d := startDate; d.Before(endDate) || d.Equal(endDate); d = d.AddDate(0, 0, 1) {
 		dateStr := d.Format("2006-01-02")
 		bookedSlots := bookedSlotsByDate[dateStr]
-		availableSlots := calculateAvailableSlots(bookedSlots)
-		slotCount := len(availableSlots)
 
-		var availability string
-		switch {
-		case slotCount == 0:
-			availability = "none"
-		case slotCount <= 6:
-			availability = "low"
-		case slotCount <= 16:
-			availability = "medium"
-		default:
-			availability = "high"
+		isToday := dateStr == today
+
+		workingHours, err := getWorkingHours(db, artistID, d.Weekday().String())
+		
+		if err != nil {
+			continue
 		}
-		result[dateStr] = availability
-	}
+		availableSlots := calculateAvailableSlots(bookedSlots, isToday, workingHours, d)
 
-	for d := startDate; d.Before(endDate) || d.Equal(endDate); d = d.AddDate(0, 0, 1) {
-		dateStr := d.Format("2006-01-02")
-		bookedSlots := bookedSlotsByDate[dateStr]
-		availableSlots := calculateAvailableSlots(bookedSlots)
 		slotCount := len(availableSlots)
 
 		var availability string
@@ -587,8 +793,6 @@ func availableTimesMonthlyHandler(w http.ResponseWriter, r *http.Request) {
 			availability = "none"
 		case slotCount <= 6:
 			availability = "low"
-		case slotCount <= 16:
-			availability = "medium"
 		default:
 			availability = "high"
 		}
@@ -602,34 +806,34 @@ func availableTimesMonthlyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseBookedSlotsByDate(rows *sql.Rows) map[string][]timeSlot {
-	slotsByDate := make(map[string][]timeSlot)
+    slotsByDate := make(map[string][]timeSlot)
+    loc, _ := time.LoadLocation("Europe/Athens")
 
-	startOfDay, _ := time.Parse("15:04", "09:00")
-	endOfDay, _ := time.Parse("15:04", "21:00")
+    for rows.Next() {
+        var date time.Time
+        var startStr, endStr string
+        if err := rows.Scan(&date, &startStr, &endStr); err != nil {
+            continue
+        }
 
-	for rows.Next() {
-		var dateStr, startStr, endStr string
-		if rows.Scan(&dateStr, &startStr, &endStr) != nil {
-			continue
-		}
+        // Parse just the clock times in the correct location
+        tStart, err1 := time.ParseInLocation("15:04", startStr, loc)
+        tEnd,   err2 := time.ParseInLocation("15:04", endStr,   loc)
+        if err1 != nil || err2 != nil {
+            continue
+        }
 
-		parsedDate, err := time.Parse(time.RFC3339, dateStr)
-		if err != nil {
-			continue
-		}
+        // Combine into full‐date time.Time values
+        start := time.Date(date.Year(), date.Month(), date.Day(),
+            tStart.Hour(), tStart.Minute(), 0, 0, loc)
+        end := time.Date(date.Year(), date.Month(), date.Day(),
+            tEnd.Hour(),   tEnd.Minute(),   0, 0, loc)
 
-		start, _ := time.Parse("15:04", startStr)
-		end, _ := time.Parse("15:04", endStr)
+        key := date.Format("2006-01-02")
+        slotsByDate[key] = append(slotsByDate[key], timeSlot{start, end})
+    }
 
-		if start.Before(startOfDay) || end.After(endOfDay) {
-			continue
-		}
-
-		dateStr = parsedDate.Format("2006-01-02")
-
-		slotsByDate[dateStr] = append(slotsByDate[dateStr], timeSlot{start, end})
-	}
-	return slotsByDate
+    return slotsByDate
 }
 
 func createBookingHandler(w http.ResponseWriter, r *http.Request) {
@@ -678,16 +882,41 @@ func createBookingHandler(w http.ResponseWriter, r *http.Request) {
 	var bookingID int
 	err = db.QueryRow(`
         INSERT INTO bookings (firstname, lastname, email, phone, date, 
-            start_time, end_time, user_id, service_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            start_time, end_time, user_id, service_id, bath)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING booking_id`,
 		req.FirstName, req.LastName, req.Email, req.Phone,
-		req.Date, timeParts[0], timeParts[1], artistID, serviceID,
+		req.Date, timeParts[0], timeParts[1], artistID, serviceID, req.Bath,
 	).Scan(&bookingID)
 
 	if err != nil {
 		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 		return
+	}
+
+	var clientID int
+	err = db.QueryRow(`
+		SELECT client_id FROM clients WHERE phone = $1`,
+		req.Phone,
+	).Scan(&clientID)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// No existing client, proceed to insert
+			_, err = db.Exec(`
+			INSERT INTO clients (firstname, lastname, email, phone)
+			VALUES ($1, $2, $3, $4)
+			ON CONFLICT (phone) DO NOTHING`,
+				req.FirstName, req.LastName, req.Email, req.Phone,
+			)
+			if err != nil {
+				http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+				return
+			}
+		} else {
+			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+			return
+		}
 	}
 
 	response := BookingResponse{
@@ -744,13 +973,27 @@ func createDashBookingHandler(w http.ResponseWriter, r *http.Request) {
 	var bookingID int
 	err = db.QueryRow(`
         INSERT INTO bookings (firstname, lastname, email, phone, date, 
-            start_time, end_time, user_id, service_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        start_time, end_time, user_id, service_id, bath)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING booking_id`,
 		req.FirstName, req.LastName, req.Email, req.Phone,
-		req.Date, timeParts[0], timeParts[1], artistID, serviceID,
+		req.Date, timeParts[0], timeParts[1], artistID, serviceID, req.Bath,
 	).Scan(&bookingID)
 
+	if err != nil {
+		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO clients (firstname, lastname, email, phone)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (phone) DO UPDATE
+		SET firstname = EXCLUDED.firstname,
+		lastname = EXCLUDED.lastname,
+		email = EXCLUDED.email;`,
+		req.FirstName, req.LastName, req.Email, req.Phone,
+	)
 	if err != nil {
 		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
 		return
@@ -778,7 +1021,48 @@ func artistsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT user_id, name FROM users WHERE is_visible = true")
+	rows, err := db.Query("SELECT user_id, name FROM users WHERE is_visible = true ORDER BY user_id")
+	if err != nil {
+		http.Error(w, `{"success":false,"error":"database query failed"}`, http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var artists []ArtistsResponse
+
+	for rows.Next() {
+		var artist ArtistsResponse
+		err := rows.Scan(&artist.UserID, &artist.Name)
+		if err != nil {
+			http.Error(w, `{"success":false,"error":"data scan failed"}`, http.StatusInternalServerError)
+			return
+		}
+		artists = append(artists, artist)
+	}
+
+	if err = rows.Err(); err != nil {
+		http.Error(w, `{"success":false,"error":"rows iteration failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(artists)
+}
+
+func dashArtistsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, `{"success":false}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	db, err := dbConn()
+	if err != nil {
+		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	rows, err := db.Query("SELECT DISTINCT user_id, name FROM users WHERE is_visible = true ORDER BY user_id")
 	if err != nil {
 		http.Error(w, `{"success":false,"error":"database query failed"}`, http.StatusInternalServerError)
 		return
@@ -808,7 +1092,7 @@ func artistsHandler(w http.ResponseWriter, r *http.Request) {
 
 func getBookingsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, `{"success":false}`, http.StatusMethodNotAllowed)
+		http.Error(w, `{"success":}`, http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -822,7 +1106,7 @@ func getBookingsHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query(`
 		SELECT 
 			b.booking_id, b.firstname, b.lastname, b.email, b.phone, 
-			b.date, b.start_time, b.end_time, b.service_id, 
+			b.date, b.start_time, b.end_time, b.service_id, b.bath,
 			u.user_id, u.name, s.name, s.color
 		FROM bookings b
 		JOIN users u ON u.user_id = b.user_id
@@ -841,7 +1125,7 @@ func getBookingsHandler(w http.ResponseWriter, r *http.Request) {
 		var b Booking
 		err := rows.Scan(
 			&b.BookingID, &b.FirstName, &b.LastName, &b.Email, &b.Phone,
-			&b.Date, &b.StartTime, &b.EndTime, &b.ServiceID,
+			&b.Date, &b.StartTime, &b.EndTime, &b.ServiceID, &b.Bath,
 			&b.UserID, &b.UserName, &b.ServiceName, &b.ServiceColor,
 		)
 		if err != nil {
@@ -884,14 +1168,29 @@ func bookingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		query := `UPDATE bookings SET user_id=$1, service_id=$2, date=$3, start_time=$4,
-					end_time=$5, firstname=$6, lastname=$7, phone=$8, email=$9 
-		          WHERE booking_id=$10`
+					end_time=$5, firstname=$6, lastname=$7, phone=$8, email=$9, bath=$10
+		          WHERE booking_id=$11`
 		_, err = db.Exec(query, b.Artist, b.Service, b.Date, timeParts[0], timeParts[1], b.FirstName,
-			b.LastName, b.Phone, b.Email, id)
+			b.LastName, b.Phone, b.Email, b.Bath, id)
 		if err != nil {
 			http.Error(w, fmt.Sprintf(`{"success":false, "error": "%s"}`, err.Error()), http.StatusInternalServerError)
 			return
 		}
+
+		_, err = db.Exec(`
+			INSERT INTO clients (firstname, lastname, email, phone)
+			VALUES ($1, $2, $3, $4)
+			ON CONFLICT (phone) DO UPDATE
+			SET firstname = EXCLUDED.firstname,
+			lastname = EXCLUDED.lastname,
+			email = EXCLUDED.email;`,
+			b.FirstName, b.LastName, b.Email, b.Phone,
+		)
+		if err != nil {
+			http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+			return
+		}
+
 		w.Write([]byte(`{"success":true}`))
 
 	case http.MethodDelete:
@@ -904,4 +1203,89 @@ func bookingHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, `{"success":false, "error": "Method not allowed"}`, http.StatusMethodNotAllowed)
 	}
+}
+
+func disableDayHandler(w http.ResponseWriter, r *http.Request) {
+	// Decode request body
+	var req DisableDayRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Parse the date
+	bookingDate, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		http.Error(w, "Invalid date format. Use YYYY-MM-DD", http.StatusBadRequest)
+		return
+	}
+
+	db, err := dbConn()
+	if err != nil {
+		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	if req.Status {
+		// Insert booking
+		_, err := db.Exec(`
+			INSERT INTO bookings (user_id, date, service_id, start_time, end_time, firstname, lastname, email, phone)
+			VALUES ($1, $2, '19', '09:00', '21:00', '', '', '', '')`,
+			req.UserID, bookingDate,
+		)
+		if err != nil {
+			log.Printf("Insert error: %v", err)
+			http.Error(w, "Failed to insert booking", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// Delete booking
+		_, err := db.Exec(`
+			DELETE FROM bookings
+			WHERE user_id = $1 AND date = $2 AND start_time = '09:00' AND end_time = '21:00'`,
+			req.UserID, bookingDate,
+		)
+		if err != nil {
+			log.Printf("Delete error: %v", err)
+			http.Error(w, "Failed to delete booking", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func clientDataHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := dbConn()
+	if err != nil {
+		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	phone := "%" + r.URL.Query().Get("phone") + "%"
+	rows, err := db.Query(`
+			SELECT client_id, firstname, lastname, email, phone 
+			FROM clients 
+			WHERE phone LIKE $1 
+			ORDER BY client_id DESC`, phone)
+	if err != nil {
+		http.Error(w, `{"success":false}`, http.StatusInternalServerError)
+		return
+	}
+
+	var clients []Client
+	for rows.Next() {
+		var c Client
+		if err := rows.Scan(&c.ClientID, &c.Firstname, &c.Lastname, &c.Email, &c.Phone); err == nil {
+			clients = append(clients, c)
+		}
+	}
+
+	json.NewEncoder(w).Encode(clients)
+}
+
+func forgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+
 }

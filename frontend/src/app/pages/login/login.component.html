@@ -23,7 +23,7 @@
 
       <div>
         <label for="username" class="block text-sm/6 font-medium text-gray-900"
-          >Όνομα χρήστη</label
+          >Όνομα χρήστη ή Email</label
         >
         <div class="mt-2">
           <input
@@ -31,7 +31,7 @@
             name="username"
             id="username"
             [(ngModel)]="formData.username"
-            autocomplete="username"
+            autocomplete="on"
             required
             class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:ring-black focus:ring-2 sm:text-sm/6"
           />
@@ -45,13 +45,13 @@
             class="block text-sm/6 font-medium text-gray-900"
             >Κωδικός πρόσβασης</label
           >
-          <!-- <div class="text-sm">
-            <a
-              href="#"
-              class="font-semibold text-amber-950 hover:text-amber-900"
-              >Forgot password?</a
-            >
-          </div> -->
+          <div class="text-sm">
+            <span
+              (click)="forgotPassword()"
+              class="text-xs font-semibold text-gray-950 hover:text-gray-500 cursor-pointer"
+              >Ξέχασες τον κωδικό σου?
+          </span>
+          </div>
         </div>
         <div class="mt-2">
           <input
@@ -59,7 +59,7 @@
             name="password"
             id="password"
             [(ngModel)]="formData.password"
-            autocomplete="current-password"
+            autocomplete="on"
             required
             class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:ring-black focus:ring-2 sm:text-sm/6"
           />

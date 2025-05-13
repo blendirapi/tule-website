@@ -10,13 +10,13 @@
 				type="radio"
 				name="haircut"
 				class="hidden peer"
-				(click)="selectOption('1', 'Κούρεμα')"
+				(change)="selectOption('1', 'Κούρεμα', 13)"
 			/>
 			<div
 				class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-32 sm:w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden"
 			>
-				<img src="head.svg" alt="Κεφάλι με μαλί" class="h-28 w-16 object-cover mb-1" />
-				<span class="text-sm">Κούρεμα</span>
+				<img src="head.png" alt="Κεφάλι με μαλί" class="h-28 w-16 object-cover mb-1" />
+				<span class="text-sm">Κούρεμα - 13€</span>
 			</div>
 		</label>
 
@@ -26,18 +26,41 @@
 				type="radio"
 				name="haircut"
 				class="hidden peer"
-				(click)="selectOption('2', 'Κούρεμα & Γενιάδα')"
+				(change)="selectOption('2', 'Κούρεμα & Γενιάδα', 15)"
 			/>
 			<div
 				class="bg-gray-100 hover:bg-gray-300 peer-checked:bg-gray-300 rounded-lg h-40 w-32 sm:w-40 flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden"
 			>
 				<img
-					src="head_and_beard.svg"
+					src="head_and_beard.png"
 					alt="Κεφάλι με μαλί & γενιάδα"
 					class="h-28 w-16 object-cover mb-1"
 				/>
-				<span class="text-sm">Κούρεμα & Γενιάδα</span>
+				<span class="text-sm">Κούρεμα & Γενιάδα - 15€</span>
 			</div>
 		</label>
+	</div>
+
+	<!-- Shampoo Option -->
+	<div class="mt-6 flex justify-center">
+		<label class="flex items-center gap-2 text-sm">
+		  <input 
+			type="checkbox" 
+			(change)="toggleShampoo($event, 3)"
+			class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" 
+		  />
+		  <span>Λούσιμο (+3€)</span>
+		</label>
+	  </div>
+
+	<!-- Next Button -->
+	<div class="mt-6 flex justify-center">
+		<button
+			class="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+			(click)="emitSelection()"
+			[disabled]="!selectedOption"
+		>
+			Επόμενο
+		</button>
 	</div>
 </fieldset>
